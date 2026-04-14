@@ -30,9 +30,13 @@
         <p>A focused view of flood events in Colombia, Ecuador, Peru, and Chile.</p>
     </header>
     <nav>
-        <a href="index.html">Main View (All)</a>
-        <a href="caribbean.html">Caribbean Region</a>
-        <a href="andean.html">Pacific Coast Andean</a>
+        <strong>Flood Archive:</strong>
+        <a href="index.html">Main View</a>
+        <a href="caribbean.html">Caribbean</a>
+        <a href="andean.html">Pacific Andean</a>
+        <span style="color: #444; margin: 0 10px;">|</span>
+        <strong>Local Focus:</strong>
+        <a href="comuna5.html">Tumaco Mangroves (Comuna 5)</a>
     </nav>
     <div id="map"></div>
     <div class="stats">
@@ -75,7 +79,7 @@
                         if (severity >= 2) highCount++;
 
                         var marker = L.circleMarker([parseFloat(row.lat), parseFloat(row.long)], {
-                            radius: severity * 5,
+                            radius: severity * 4,
                             fillColor: getColor(severity),
                             color: "#000",
                             weight: 1,
@@ -89,7 +93,9 @@
                                 <p><strong>Date:</strong> ${row.Began}</p>
                                 <p><strong>Source:</strong> ${row.MainCause}</p>
                                 <p><strong>Region/River:</strong> ${row.Area}</p>
-                                <p><strong>Fatalities:</strong> ${row.Dead || '0'}</p>
+                                <p><strong>Intensity:</strong> ${row.Severity} (1-2 Scale)</p>
+                                <p><strong>Fatalities:</strong> ${row.Dead || 'Unknown'}</p>
+                                <p><strong>Displaced:</strong> ${row.Displaced || 'Unknown'}</p>
                             </div>
                         `;
                         marker.bindPopup(popupContent);
@@ -107,7 +113,7 @@
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'legend'),
                 grades = [1, 1.5, 2],
-                labels = ['Low Intensity', 'Medium Intensity', 'High Intensity'];
+                labels = ['Low Intensity', 'Medium Intensity', 'High Intensity (Major)'];
             
             div.innerHTML += '<strong>Flood Severity</strong><br>';
             for (var i = 0; i < grades.length; i++) {

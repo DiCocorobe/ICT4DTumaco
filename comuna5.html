@@ -3,84 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map: Iberia, Victoria & Obrero - Tumaco Mangroves</title>
+    <title>Tumaco Mangroves: Comuna 5</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
-        body { margin: 0; padding: 0; }
-        #map { height: 100vh; width: 100vw; }
-        .map-title {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
-            min-width: 300px;
-        }
-        .nav-link {
-            position: absolute;
-            top: 80px;
-            left: 10px;
-            z-index: 1000;
-            background: #fff;
-            padding: 8px 15px;
-            border-radius: 5px;
-            text-decoration: none;
-            color: #333;
-            font-family: Arial;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .legend {
-            position: absolute;
-            bottom: 30px;
-            right: 10px;
-            z-index: 1000;
-            background: white;
-            padding: 12px;
-            border-radius: 5px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-            line-height: 20px;
-        }
-        .legend i {
-            width: 18px;
-            height: 18px;
-            float: left;
-            margin-right: 8px;
-            opacity: 0.7;
-            border: 1px solid #999;
-        }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; }
+        #map { height: 80vh; width: 100%; }
+        header { padding: 20px; text-align: center; background: #2e7d32; color: white; }
+        nav { background-color: #1b5e20; padding: 10px; text-align: center; border-bottom: 2px solid #003300; }
+        nav a { color: #ffffff; text-decoration: none; margin: 0 15px; font-weight: bold; }
+        nav a:hover { color: #a5d6a7; text-decoration: underline; }
+        .legend { background-color: white; padding: 10px; border-radius: 5px; line-height: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        .legend i { width: 15px; height: 15px; float: left; margin-right: 8px; border-radius: 50%; border: 1px solid #999; }
+        .popup-content h3 { margin: 0 0 5px; color: #2e7d32; }
+        .popup-content p { margin: 2px 0; font-size: 0.9em; }
     </style>
 </head>
 <body>
-    <div class="map-title">
-        <h1 style="margin: 0; font-size: 1.1rem;">Tumaco Comuna 5: Mangroves & Land Limits</h1>
-        <p style="margin: 5px 0 0; font-size: 0.85rem;">Focus: Iberia, Victoria & Obrero Neighborhoods</p>
-    </div>
-    
-    <a href="index.html" class="nav-link">← Go to General Map</a>
-    
-    <div class="legend">
-        <h4 style="margin: 0 0 5px; font-size: 14px;">Reference</h4>
-        <div><i style="background: #2e7d32;"></i> Mangrove Zones</div>
-        <div><i style="background: #e91e63; border-radius: 50%;"></i> Target Neighborhoods</div>
-    </div>
+    <header>
+        <h1>Tumaco Comuna 5: Mangroves & Land Limits</h1>
+        <p>Focus: Iberia, Victoria & Obrero Neighborhoods</p>
+    </header>
+    <nav>
+        <span style="color: #a5d6a7;">Flood Archive:</span>
+        <a href="index.html">Main View</a>
+        <a href="caribbean.html">Caribbean</a>
+        <a href="andean.html">Pacific Andean</a>
+        <span style="color: #4caf50; margin: 0 10px;">|</span>
+        <span style="color: #fff; font-weight: bold;">Local Focus:</span>
+        <a href="comuna5.html">Tumaco Mangroves</a>
+    </nav>
 
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
-        const map = L.map('map').setView([1.802, -78.750], 15);
+        // Initialize Map centered on Tumaco Comuna 5
+        var map = L.map('map').setView([1.802, -78.750], 15);
 
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        // Standard Light Tiles for clarity in local view
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
         }).addTo(map);
 
         const mangroveStyle = {
@@ -106,20 +69,31 @@
                 opacity: 1,
                 fillOpacity: 0.9
             }).addTo(map)
-              .bindPopup(`<b>Neighborhood:</b> ${n.name}<br>${n.desc}`)
-              .openTooltip(n.name, { permanent: true, direction: 'top' });
+              .bindPopup(`<div class="popup-content"><h3>${n.name}</h3><p>${n.desc}</p></div>`);
         });
 
+        // Load Mangrove Data
         fetch('mangroves_comuna5.geojson')
             .then(response => response.json())
             .then(data => {
                 L.geoJSON(data, {
                     style: mangroveStyle,
                     onEachFeature: function (feature, layer) {
-                        layer.bindPopup("<b>Mangrove Protection Zone:</b><br>" + feature.properties.name);
+                        layer.bindPopup("<b>Mangrove Protection Zone:</b><br>" + (feature.properties.name || "Unnamed Mangrove Area"));
                     }
                 }).addTo(map);
             });
+
+        // Add Legend
+        var legend = L.control({position: 'bottomright'});
+        legend.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'legend');
+            div.innerHTML += '<strong>Reference</strong><br>';
+            div.innerHTML += '<i style="background: #2e7d32; border-radius: 0;"></i> Mangrove Zones<br>';
+            div.innerHTML += '<i style="background: #e91e63;"></i> Target Neighborhoods<br>';
+            return div;
+        };
+        legend.addTo(map);
 
         L.control.scale().addTo(map);
     </script>
