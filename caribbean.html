@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Flood Archive - Caribbean & Andean Regions</title>
+    <title>Caribbean Flood Archive</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha256-7pXvI56mI1X+X9A4uL3Z5lP3z0U6N5X6G5X7I56mI1X=" crossorigin="anonymous"></script>
@@ -26,8 +26,8 @@
 </head>
 <body>
     <header>
-        <h1>Historical Floods: Caribbean & Pacific Andean Region</h1>
-        <p>A 75-year record (1951-2026) of major flood events by intensity.</p>
+        <h1>Historical Floods: Caribbean Region</h1>
+        <p>A focused view of flood events in Caribbean islands and territories.</p>
     </header>
     <nav>
         <a href="index.html">Main View (All)</a>
@@ -42,8 +42,8 @@
     </div>
 
     <script>
-        // Initialize Map
-        var map = L.map('map').setView([10, -75], 4); // Centered between Caribbean and South America
+        // Initialize Map centered on Caribbean
+        var map = L.map('map').setView([18, -75], 5);
 
         // Dark Theme Tiles
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -52,15 +52,14 @@
             maxZoom: 20
         }).addTo(map);
 
-        // Intensity Colors (Orange Gradient)
         function getColor(severity) {
-            return severity >= 2   ? '#8B4000' : // Dark Orange
-                   severity >= 1.5 ? '#FFA500' : // Orange
-                                     '#FFD580';   // Light Orange
+            return severity >= 2   ? '#8B4000' : 
+                   severity >= 1.5 ? '#FFA500' : 
+                                     '#FFD580';
         }
 
-        // Load Data from CSV
-        Papa.parse('filtered_flood_data.csv', {
+        // Load Caribbean Data
+        Papa.parse('caribbean_floods.csv', {
             download: true,
             header: true,
             complete: function(results) {
@@ -76,7 +75,7 @@
                         if (severity >= 2) highCount++;
 
                         var marker = L.circleMarker([parseFloat(row.lat), parseFloat(row.long)], {
-                            radius: severity * 4,
+                            radius: severity * 5,
                             fillColor: getColor(severity),
                             color: "#000",
                             weight: 1,
@@ -89,17 +88,15 @@
                                 <h3>${row.Country}</h3>
                                 <p><strong>Date:</strong> ${row.Began}</p>
                                 <p><strong>Source:</strong> ${row.MainCause}</p>
-                                <p><strong>Region/River:</strong> ${row.Area}</p>
-                                <p><strong>Intensity:</strong> ${row.Severity} (1-2 Scale)</p>
+                                <p><strong>Area:</strong> ${row.Area}</p>
                                 <p><strong>Fatalities:</strong> ${row.Dead || 'Unknown'}</p>
-                                <p><strong>Displaced:</strong> ${row.Displaced || 'Unknown'}</p>
                             </div>
                         `;
                         marker.bindPopup(popupContent);
                     }
                 });
 
-                document.getElementById('total-floods').innerText = data.length - 1; // Correct for empty last row
+                document.getElementById('total-floods').innerText = data.length - 1;
                 document.getElementById('high-intensity').innerText = highCount;
                 document.getElementById('fatalities').innerText = totalDead.toLocaleString();
             }
@@ -110,7 +107,7 @@
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'legend'),
                 grades = [1, 1.5, 2],
-                labels = ['Low Intensity', 'Medium Intensity', 'High Intensity (Major)'];
+                labels = ['Low Intensity', 'Medium Intensity', 'High Intensity'];
             
             div.innerHTML += '<strong>Flood Severity</strong><br>';
             for (var i = 0; i < grades.length; i++) {
