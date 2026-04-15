@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colombia: Flood Risks & Health Infrastructure</title>
+    <title>Colombia: Flood Risks & Health Complexity</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -18,14 +18,14 @@
         .stat-val { font-size: 1.4em; font-weight: bold; color: #FFA500; }
         .stat-label { font-size: 0.75em; color: #888; text-transform: uppercase; }
         .legend { background: rgba(30, 30, 30, 0.9); padding: 10px; border-radius: 5px; line-height: 18px; color: #fff; font-size: 12px; }
-        .legend i { width: 14px; height: 14px; float: left; margin-right: 8px; border-radius: 50%; }
-        .health-icon { background: #ff3b3b; color: white; border-radius: 50%; text-align: center; font-weight: bold; line-height: 20px; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .legend i { width: 14px; height: 14px; float: left; margin-right: 8px; border-radius: 50%; border: 1px solid #fff; }
+        .health-icon { background: #333; color: white; border-radius: 50%; text-align: center; font-weight: bold; line-height: 20px; border: 2px solid white; font-size: 12px; }
     </style>
 </head>
 <body>
     <header>
-        <h1>Colombia Unified Map: Floods & Health Facilities</h1>
-        <p>Analyzing the intersection of environmental risk and emergency infrastructure (2001-2026).</p>
+        <h1>Colombia Unified Map: Floods & Health Complexity</h1>
+        <p>Analyzing health infrastructure within 100km of historical flood points (2001-2026).</p>
     </header>
     
     <div class="controls">
@@ -42,16 +42,23 @@
         </div>
         <div class="control-group">
             <label>Year:</label>
-            <select id="year-select">
-                <option value="all">All (Last 25 Years)</option>
+            <select id="year-select"><option value="all">All Years</option></select>
+        </div>
+        <div class="control-group">
+            <label>Complexity:</label>
+            <select id="complexity-select">
+                <option value="all">All Levels</option>
+                <option value="High">High (Gold)</option>
+                <option value="Medium">Medium (Silver)</option>
+                <option value="Low">Low (Bronze)</option>
             </select>
         </div>
         <div class="control-group">
-            <label>Min Intensity:</label>
+            <label>Flood Intensity:</label>
             <select id="intensity-select">
-                <option value="1">1.0 (Low)</option>
-                <option value="1.5">1.5 (Medium)</option>
-                <option value="2">2.0 (High/Major)</option>
+                <option value="1">1.0+</option>
+                <option value="1.5">1.5+</option>
+                <option value="2">2.0+</option>
             </select>
         </div>
     </div>
@@ -60,12 +67,11 @@
 
     <div class="stats">
         <div class="stat-box"><div class="stat-val" id="count-floods">0</div><div class="stat-label">Flood Events</div></div>
-        <div class="stat-box"><div class="stat-val" id="count-health">0</div><div class="stat-label">Health Facilities</div></div>
-        <div class="stat-box"><div class="stat-val" id="total-dead">0</div><div class="stat-label">Total Fatalities</div></div>
+        <div class="stat-box"><div class="stat-val" id="count-health">0</div><div class="stat-label">Health (Shown)</div></div>
+        <div class="stat-box"><div class="stat-val" id="total-dead">0</div><div class="stat-label">Flood Fatalities</div></div>
     </div>
 
     <script>
-        // --- Layers ---
         var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' });
         var infrastructure = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', { attribution: 'CARTO' });
 
@@ -83,106 +89,78 @@
             "MONTERIA": [8.748, -75.881]
         };
 
-        function getColor(sev) {
-            return sev >= 2 ? '#ff0000' : sev >= 1.5 ? '#ffa500' : '#ffff00';
+        function getComplexityColor(level) {
+            return level === 'High' ? '#FFD700' : level === 'Medium' ? '#C0C0C0' : '#CD7F32';
         }
 
         function updateMap() {
             var selectedYear = document.getElementById('year-select').value;
             var minSev = parseFloat(document.getElementById('intensity-select').value);
             var selectedCity = document.getElementById('city-select').value;
+            var selectedComp = document.getElementById('complexity-select').value;
 
-            // Update View: If "all", zoom out to show the whole country.
-            if (selectedCity !== 'all') {
-                map.setView(cityCoords[selectedCity], 13);
-            } else {
-                map.setView([4.5, -74.0], 6);
-            }
+            if (selectedCity !== 'all') { map.setView(cityCoords[selectedCity], 13); } 
+            else { map.setView([4.5, -74.0], 6); }
 
-            // Update Floods
             if (floodLayer) map.removeLayer(floodLayer);
-            var floodCount = 0;
-            var deadCount = 0;
-
+            var fCount = 0; var dCount = 0;
             floodLayer = L.geoJSON(floodData, {
                 filter: function(f) {
-                    var yMatch = (selectedYear === 'all') || (f.properties.year === selectedYear);
-                    var sMatch = f.properties.severity >= minSev;
-                    if (yMatch && sMatch) {
-                        floodCount++;
-                        deadCount += f.properties.dead;
-                        return true;
-                    }
-                    return false;
+                    var match = (selectedYear === 'all' || f.properties.year === selectedYear) && f.properties.severity >= minSev;
+                    if (match) { fCount++; dCount += f.properties.dead; }
+                    return match;
                 },
                 pointToLayer: function(f, l) {
-                    return L.circleMarker(l, {
-                        radius: f.properties.severity * 8,
-                        fillColor: getColor(f.properties.severity),
-                        color: "#000", weight: 1, fillOpacity: 0.7
-                    });
+                    return L.circleMarker(l, { radius: f.properties.severity * 8, fillColor: f.properties.severity >= 2 ? '#ff0000' : '#ffa500', color: "#000", weight: 1, fillOpacity: 0.7 });
                 },
-                onEachFeature: function(f, l) {
-                    l.bindPopup(`<b>Flood: ${f.properties.area}</b><br>Year: ${f.properties.year}<br>Intensity: ${f.properties.severity}<br>Fatalities: ${f.properties.dead}`);
-                }
+                onEachFeature: function(f, l) { l.bindPopup(`<b>Flood: ${f.properties.area}</b><br>Year: ${f.properties.year}<br>Intensity: ${f.properties.severity}`); }
             }).addTo(map);
 
-            // Update Health (Filtered by City if selected)
             if (healthLayer) map.removeLayer(healthLayer);
-            var healthCount = 0;
+            var hCount = 0;
             healthLayer = L.geoJSON(healthData, {
                 filter: function(f) {
-                    if (selectedCity === 'all') return true;
-                    return f.properties.city === selectedCity;
+                    var cMatch = (selectedComp === 'all' || f.properties.complexity === selectedComp);
+                    var cityMatch = (selectedCity === 'all' || f.properties.city.toUpperCase().includes(selectedCity));
+                    return cMatch && cityMatch;
                 },
                 pointToLayer: function(f, l) {
-                    healthCount++;
+                    hCount++;
+                    var color = getComplexityColor(f.properties.complexity);
                     return L.marker(l, {
-                        icon: L.divIcon({ className: 'health-icon', html: 'H', iconSize: [20, 20] })
+                        icon: L.divIcon({ className: 'health-icon', html: 'H', iconSize: [20, 20], iconAnchor: [10, 10], style: `background: ${color}; color: #000;` })
                     });
                 },
-                onEachFeature: function(f, l) {
-                    l.bindPopup(`<b>${f.properties.name}</b><br>Type: ${f.properties.type}<br>City: ${f.properties.city}`);
-                }
+                onEachFeature: function(f, l) { l.bindPopup(`<b>${f.properties.name}</b><br>Complexity: ${f.properties.complexity}<br>City: ${f.properties.city}`); }
             }).addTo(map);
 
-            document.getElementById('count-floods').innerText = floodCount;
-            document.getElementById('count-health').innerText = healthCount;
-            document.getElementById('total-dead').innerText = deadCount.toLocaleString();
+            document.getElementById('count-floods').innerText = fCount;
+            document.getElementById('count-health').innerText = hCount;
+            document.getElementById('total-dead').innerText = dCount.toLocaleString();
         }
 
-        // --- Data Loading ---
         Promise.all([
             fetch('colombia_floods.geojson').then(r => r.json()),
-            fetch('at_risk_health.geojson').then(r => r.json())
+            fetch('colombia_health_complexity.geojson').then(r => r.json())
         ]).then(([fData, hData]) => {
-            floodData = fData;
-            healthData = hData;
-
-            // Populate Years
+            floodData = fData; healthData = hData;
             var yearSelect = document.getElementById('year-select');
             var years = [...new Set(fData.features.map(f => f.properties.year))].sort().reverse();
-            years.forEach(y => {
-                var opt = document.createElement('option');
-                opt.value = opt.innerHTML = y;
-                yearSelect.appendChild(opt);
-            });
-
+            years.forEach(y => { var opt = document.createElement('option'); opt.value = opt.innerHTML = y; yearSelect.appendChild(opt); });
             updateMap();
         });
 
-        document.getElementById('city-select').addEventListener('change', updateMap);
-        document.getElementById('year-select').addEventListener('change', updateMap);
-        document.getElementById('intensity-select').addEventListener('change', updateMap);
+        ['city-select', 'year-select', 'complexity-select', 'intensity-select'].forEach(id => document.getElementById(id).addEventListener('change', updateMap));
 
         var legend = L.control({position: 'bottomright'});
         legend.onAdd = function() {
             var div = L.DomUtil.create('div', 'legend');
             div.innerHTML = '<strong>Legend</strong><br>' +
-                            '<i style="background: #ff0000"></i> Major Flood (2.0)<br>' +
-                            '<i style="background: #ffa500"></i> Medium Flood (1.5)<br>' +
-                            '<i style="background: #ffff00"></i> Low Flood (1.0)<br>' +
-                            '<i style="background: #ff3b3b; border-radius: 0; color: white; text-align: center; width: 14px;">H</i> Health Facility';
+                            '<i style="background: #ff0000"></i> Major Flood<br>' +
+                            '<i style="background: #ffa500"></i> Medium Flood<br>' +
+                            '<i style="background: #FFD700"></i> High Complexity (H)<br>' +
+                            '<i style="background: #C0C0C0"></i> Medium Complexity (H)<br>' +
+                            '<i style="background: #CD7F32"></i> Low Complexity (H)';
             return div;
         };
         legend.addTo(map);
