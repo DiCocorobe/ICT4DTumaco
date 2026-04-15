@@ -155,36 +155,24 @@
         }
 
         // Load Data
-        Papa.parse('filtered_flood_data.csv', {
+        Papa.parse('colombia_floods.csv', {
             download: true,
             header: true,
-            skipEmptyLines: true, // Skip empty lines that might confuse the filter
+            skipEmptyLines: true,
             complete: function(results) {
-                console.log("Total rows in CSV:", results.data.length);
+                console.log("Total rows in dedicated Colombia CSV:", results.data.length);
 
-                // Filter for Colombia and last 25 years (2001-2026)
+                // No complex filtering needed as file is already pre-filtered for Colombia and 2001+
                 allData = results.data.filter(function(row) {
-                    // Check if the row has the necessary location and date data
-                    if (!row.Began || !row.lat || !row.long) return false;
-                    
-                    var country = (row.Country || "").toString().toUpperCase();
-                    var otherCountry = (row.OtherCountry || "").toString().toUpperCase();
-                    var year = parseInt(row.Began.split('-')[0]);
-                    
-                    // Search for "COLOMBIA" anywhere in the country columns
-                    var isColombia = country.indexOf("COLOMBIA") !== -1 || otherCountry.indexOf("COLOMBIA") !== -1;
-                    
-                    return isColombia && year >= 2001;
+                    return row.Began && row.lat && row.long;
                 });
 
-                console.log("Colombia records identified (2001+):", allData.length);
+                console.log("Valid records for mapping:", allData.length);
 
                 // Populate Year Select
                 var yearSelect = document.getElementById('year-select');
                 var years = [...new Set(allData.map(r => r.Began.split('-')[0]))].filter(y => !isNaN(y)).sort().reverse();
                 
-                console.log("Available years for filter:", years);
-
                 years.forEach(year => {
                     var opt = document.createElement('option');
                     opt.value = year;
@@ -193,13 +181,14 @@
                 });
 
                 if (allData.length === 0) {
-                    alert("No Colombia data found for the last 25 years in the current file. Please check the data source.");
+                    alert("The new Colombia file seems empty or misformatted.");
                 }
 
                 updateMap();
             },
             error: function(err) {
                 console.error("Error loading CSV:", err);
+                alert("Failed to load colombia_floods.csv");
             }
         });
 
