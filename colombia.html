@@ -70,23 +70,21 @@
     <script>
         // Layer definitions
         var naturalResources = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            attribution: 'Tiles &copy; Esri'
         });
 
         var satelliteHybrid = L.layerGroup([
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'),
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; CARTO',
-                subdomains: 'abcd',
-                pane: 'shadowPane'
+                attribution: '&copy; CARTO'
             })
         ]);
 
         // Initialize Map
         var map = L.map('map', {
-            center: [4.5709, -74.2973],
+            center: [4.0, -73.0],
             zoom: 6,
-            layers: [naturalResources] // Default layer
+            layers: [naturalResources]
         });
 
         var baseMaps = {
@@ -96,57 +94,61 @@
 
         L.control.layers(baseMaps).addTo(map);
 
-        var markersLayer = L.layerGroup().addTo(map);
+        var markersGroup = L.layerGroup().addTo(map);
         var allData = [];
 
         function getColor(severity) {
-            return severity >= 2   ? '#ff0000' : // Red for major
-                   severity >= 1.5 ? '#ffa500' : // Orange
-                                     '#ffff00';   // Yellow
+            return severity >= 2   ? '#ff0000' :
+                   severity >= 1.5 ? '#ffa500' :
+                                     '#ffff00';
         }
 
         function updateMap() {
             var selectedYear = document.getElementById('year-select').value;
             var minIntensity = parseFloat(document.getElementById('intensity-select').value);
             
-            markersLayer.clearLayers();
+            markersGroup.clearLayers();
             var filtered = allData.filter(function(row) {
-                var yearMatch = (selectedYear === 'all') || (row.Began.split('-')[0] === selectedYear);
+                var year = row.Began.split('-')[0];
+                var yearMatch = (selectedYear === 'all') || (year === selectedYear);
                 var intensityMatch = parseFloat(row.Severity) >= minIntensity;
                 return yearMatch && intensityMatch;
             });
-
-            console.log(`Filtering complete: ${filtered.length} records shown for Year: ${selectedYear}, Min Severity: ${minIntensity}`);
 
             var totalDead = 0;
             var maxSev = 0;
 
             filtered.forEach(function(row) {
-                var severity = parseFloat(row.Severity);
-                var dead = parseInt(row.Dead) || 0;
-                totalDead += dead;
-                if (severity > maxSev) maxSev = severity;
+                var lat = parseFloat(row.lat);
+                var lon = parseFloat(row.long);
+                var severity = parseFloat(row.Severity) || 1.0;
+                
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    var dead = parseInt(row.Dead) || 0;
+                    totalDead += dead;
+                    if (severity > maxSev) maxSev = severity;
 
-                var marker = L.circleMarker([parseFloat(row.lat), parseFloat(row.long)], {
-                    radius: severity * 6,
-                    fillColor: getColor(severity),
-                    color: "#000",
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.7
-                });
+                    var marker = L.circleMarker([lat, lon], {
+                        radius: severity * 8,
+                        fillColor: getColor(severity),
+                        color: "#000",
+                        weight: 1.5,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
 
-                var popupContent = `
-                    <div style="color: #333">
-                        <h3 style="margin:0; color: #d35400;">${row.Area}</h3>
-                        <p><strong>Year:</strong> ${row.Began.split('-')[0]}</p>
-                        <p><strong>Cause:</strong> ${row.MainCause}</p>
-                        <p><strong>Intensity:</strong> ${row.Severity}</p>
-                        <p><strong>Fatalities:</strong> ${row.Dead || '0'}</p>
-                    </div>
-                `;
-                marker.bindPopup(popupContent);
-                markersLayer.addLayer(marker);
+                    var popupContent = `
+                        <div style="color: #333; min-width: 150px;">
+                            <h3 style="margin:0; color: #d35400;">${row.Area || 'Unknown Area'}</h3>
+                            <p><strong>Year:</strong> ${row.Began.split('-')[0]}</p>
+                            <p><strong>Cause:</strong> ${row.MainCause || 'Rain'}</p>
+                            <p><strong>Intensity:</strong> ${severity}</p>
+                            <p><strong>Fatalities:</strong> ${dead}</p>
+                        </div>
+                    `;
+                    marker.bindPopup(popupContent);
+                    markersGroup.addLayer(marker);
+                }
             });
 
             document.getElementById('total-floods').innerText = filtered.length;
@@ -160,18 +162,13 @@
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                console.log("Total rows in dedicated Colombia CSV:", results.data.length);
-
-                // No complex filtering needed as file is already pre-filtered for Colombia and 2001+
                 allData = results.data.filter(function(row) {
                     return row.Began && row.lat && row.long;
                 });
 
-                console.log("Valid records for mapping:", allData.length);
-
                 // Populate Year Select
                 var yearSelect = document.getElementById('year-select');
-                var years = [...new Set(allData.map(r => r.Began.split('-')[0]))].filter(y => !isNaN(y)).sort().reverse();
+                var years = [...new Set(allData.map(r => r.Began.split('-')[0]))].filter(y => y && !isNaN(y)).sort().reverse();
                 
                 years.forEach(year => {
                     var opt = document.createElement('option');
@@ -180,15 +177,7 @@
                     yearSelect.appendChild(opt);
                 });
 
-                if (allData.length === 0) {
-                    alert("The new Colombia file seems empty or misformatted.");
-                }
-
                 updateMap();
-            },
-            error: function(err) {
-                console.error("Error loading CSV:", err);
-                alert("Failed to load colombia_floods.csv");
             }
         });
 
