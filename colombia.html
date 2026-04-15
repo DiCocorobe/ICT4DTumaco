@@ -82,7 +82,7 @@
 
         // Initialize Map
         var map = L.map('map', {
-            center: [4.0, -73.0],
+            center: [4.5, -74.0],
             zoom: 6,
             layers: [naturalResources]
         });
@@ -94,8 +94,8 @@
 
         L.control.layers(baseMaps).addTo(map);
 
-        var markersGroup = L.layerGroup().addTo(map);
-        var allData = [];
+        var geojsonLayer;
+        var rawData;
 
         function getColor(severity) {
             return severity >= 2   ? '#ff0000' :
@@ -104,71 +104,68 @@
         }
 
         function updateMap() {
+            if (!rawData) return;
+            
             var selectedYear = document.getElementById('year-select').value;
             var minIntensity = parseFloat(document.getElementById('intensity-select').value);
             
-            markersGroup.clearLayers();
-            var filtered = allData.filter(function(row) {
-                var year = row.Began.split('-')[0];
-                var yearMatch = (selectedYear === 'all') || (year === selectedYear);
-                var intensityMatch = parseFloat(row.Severity) >= minIntensity;
-                return yearMatch && intensityMatch;
-            });
+            if (geojsonLayer) map.removeLayer(geojsonLayer);
 
             var totalDead = 0;
             var maxSev = 0;
+            var count = 0;
 
-            filtered.forEach(function(row) {
-                var lat = parseFloat(row.lat);
-                var lon = parseFloat(row.long);
-                var severity = parseFloat(row.Severity) || 1.0;
-                
-                if (!isNaN(lat) && !isNaN(lon)) {
-                    var dead = parseInt(row.Dead) || 0;
-                    totalDead += dead;
-                    if (severity > maxSev) maxSev = severity;
-
-                    var marker = L.circleMarker([lat, lon], {
-                        radius: severity * 8,
-                        fillColor: getColor(severity),
+            geojsonLayer = L.geoJSON(rawData, {
+                filter: function(feature) {
+                    var yearMatch = (selectedYear === 'all') || (feature.properties.year === selectedYear);
+                    var intensityMatch = feature.properties.severity >= minIntensity;
+                    var match = yearMatch && intensityMatch;
+                    
+                    if (match) {
+                        totalDead += feature.properties.dead;
+                        if (feature.properties.severity > maxSev) maxSev = feature.properties.severity;
+                        count++;
+                    }
+                    return match;
+                },
+                pointToLayer: function(feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: feature.properties.severity * 8,
+                        fillColor: getColor(feature.properties.severity),
                         color: "#000",
                         weight: 1.5,
                         opacity: 1,
                         fillOpacity: 0.8
                     });
-
+                },
+                onEachFeature: function(feature, layer) {
                     var popupContent = `
                         <div style="color: #333; min-width: 150px;">
-                            <h3 style="margin:0; color: #d35400;">${row.Area || 'Unknown Area'}</h3>
-                            <p><strong>Year:</strong> ${row.Began.split('-')[0]}</p>
-                            <p><strong>Cause:</strong> ${row.MainCause || 'Rain'}</p>
-                            <p><strong>Intensity:</strong> ${severity}</p>
-                            <p><strong>Fatalities:</strong> ${dead}</p>
+                            <h3 style="margin:0; color: #d35400;">${feature.properties.area || 'Colombia'}</h3>
+                            <p><strong>Year:</strong> ${feature.properties.year}</p>
+                            <p><strong>Cause:</strong> ${feature.properties.cause}</p>
+                            <p><strong>Intensity:</strong> ${feature.properties.severity}</p>
+                            <p><strong>Fatalities:</strong> ${feature.properties.dead}</p>
                         </div>
                     `;
-                    marker.bindPopup(popupContent);
-                    markersGroup.addLayer(marker);
+                    layer.bindPopup(popupContent);
                 }
-            });
+            }).addTo(map);
 
-            document.getElementById('total-floods').innerText = filtered.length;
+            document.getElementById('total-floods').innerText = count;
             document.getElementById('total-fatalities').innerText = totalDead.toLocaleString();
             document.getElementById('max-severity').innerText = maxSev.toFixed(1);
         }
 
-        // Load Data
-        Papa.parse('colombia_floods.csv', {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                allData = results.data.filter(function(row) {
-                    return row.Began && row.lat && row.long;
-                });
-
+        // Load GeoJSON natively
+        fetch('colombia_floods.geojson')
+            .then(response => response.json())
+            .then(data => {
+                rawData = data;
+                
                 // Populate Year Select
                 var yearSelect = document.getElementById('year-select');
-                var years = [...new Set(allData.map(r => r.Began.split('-')[0]))].filter(y => y && !isNaN(y)).sort().reverse();
+                var years = [...new Set(data.features.map(f => f.properties.year))].filter(y => y && !isNaN(y)).sort().reverse();
                 
                 years.forEach(year => {
                     var opt = document.createElement('option');
@@ -178,8 +175,8 @@
                 });
 
                 updateMap();
-            }
-        });
+            })
+            .catch(error => console.error('Error loading GeoJSON:', error));
 
         document.getElementById('year-select').addEventListener('change', updateMap);
         document.getElementById('intensity-select').addEventListener('change', updateMap);
