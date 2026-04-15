@@ -154,7 +154,7 @@
         // --- Data Loading ---
         Promise.all([
             fetch('colombia_floods.geojson').then(r => r.json()),
-            fetch('caribbean_health.geojson').then(r => r.json())
+            fetch('at_risk_health.geojson').then(r => r.json())
         ]).then(([fData, hData]) => {
             floodData = fData;
             healthData = hData;
