@@ -158,19 +158,21 @@
         Papa.parse('filtered_flood_data.csv', {
             download: true,
             header: true,
+            skipEmptyLines: true, // Skip empty lines that might confuse the filter
             complete: function(results) {
                 console.log("Total rows in CSV:", results.data.length);
 
                 // Filter for Colombia and last 25 years (2001-2026)
                 allData = results.data.filter(function(row) {
+                    // Check if the row has the necessary location and date data
                     if (!row.Began || !row.lat || !row.long) return false;
                     
-                    var country = (row.Country || "").toString().trim();
-                    var otherCountry = (row.OtherCountry || "").toString().trim();
+                    var country = (row.Country || "").toString().toUpperCase();
+                    var otherCountry = (row.OtherCountry || "").toString().toUpperCase();
                     var year = parseInt(row.Began.split('-')[0]);
                     
-                    // Match "Colombia" even if it's in OtherCountry or has extra characters
-                    var isColombia = country.includes("Colombia") || otherCountry.includes("Colombia");
+                    // Search for "COLOMBIA" anywhere in the country columns
+                    var isColombia = country.indexOf("COLOMBIA") !== -1 || otherCountry.indexOf("COLOMBIA") !== -1;
                     
                     return isColombia && year >= 2001;
                 });
@@ -179,7 +181,7 @@
 
                 // Populate Year Select
                 var yearSelect = document.getElementById('year-select');
-                var years = [...new Set(allData.map(r => r.Began.split('-')[0]))].sort().reverse();
+                var years = [...new Set(allData.map(r => r.Began.split('-')[0]))].filter(y => !isNaN(y)).sort().reverse();
                 
                 console.log("Available years for filter:", years);
 
@@ -190,7 +192,14 @@
                     yearSelect.appendChild(opt);
                 });
 
+                if (allData.length === 0) {
+                    alert("No Colombia data found for the last 25 years in the current file. Please check the data source.");
+                }
+
                 updateMap();
+            },
+            error: function(err) {
+                console.error("Error loading CSV:", err);
             }
         });
 
