@@ -3,213 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colombia: Flood Risks & Health Infrastructure</title>
+    <title>Colombia Health & Flood Map (Simplified)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: #f0f0f0; }
-        header { padding: 20px; text-align: center; background: linear-gradient(180deg, #1a1a1a 0%, #121212 100%); border-bottom: 2px solid #333; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        h1 { margin: 0; font-size: 1.8em; color: #fff; letter-spacing: 1px; }
-        header p { margin: 5px 0 0; color: #aaa; font-size: 0.9em; }
-        #map { height: 70vh; width: 100%; border-bottom: 1px solid #333; }
-        .controls { background: #1a1a1a; padding: 15px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid #444; }
-        .control-group { display: flex; align-items: center; gap: 10px; }
-        label { font-weight: 600; font-size: 0.85em; color: #ccc; text-transform: uppercase; }
-        select { background: #2a2a2a; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: border-color 0.2s; }
-        select:hover { border-color: #888; }
-        select:focus { outline: none; border-color: #FFA500; }
-        .stats { padding: 20px; display: flex; justify-content: space-around; background: #1a1a1a; }
-        .stat-box { text-align: center; flex: 1; border-right: 1px solid #333; }
-        .stat-box:last-child { border-right: none; }
-        .stat-val { font-size: 1.8em; font-weight: 800; color: #FFA500; text-shadow: 0 0 10px rgba(255, 165, 0, 0.3); }
-        .stat-label { font-size: 0.7em; color: #999; text-transform: uppercase; margin-top: 5px; font-weight: bold; letter-spacing: 0.5px; }
-        .legend { background: rgba(20, 20, 20, 0.95); padding: 12px; border-radius: 8px; line-height: 22px; color: #fff; font-size: 12px; border: 1px solid #444; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .legend strong { display: block; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 4px; font-size: 13px; color: #FFA500; }
-        .legend i { width: 14px; height: 14px; float: left; margin-right: 10px; border-radius: 50%; border: 1.5px solid #fff; margin-top: 3px; }
-        .health-icon { border-radius: 50%; text-align: center; font-weight: 900; line-height: 20px; border: 2px solid white; font-size: 11px; box-shadow: 0 0 5px rgba(0,0,0,0.8); transition: transform 0.2s; }
-        .health-icon:hover { transform: scale(1.2); z-index: 1000 !important; }
-        .leaflet-popup-content-wrapper { background: #222; color: #eee; border-radius: 8px; }
-        .leaflet-popup-tip { background: #222; }
+        body { margin: 0; font-family: sans-serif; background: #f4f4f4; }
+        #header { background: #2c3e50; color: white; padding: 15px; text-align: center; }
+        #controls { background: white; padding: 10px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; border-bottom: 1px solid #ddd; }
+        #map { height: 70vh; width: 100%; }
+        #stats { background: white; padding: 15px; display: flex; justify-content: space-around; font-weight: bold; border-top: 1px solid #ddd; }
+        .legend { background: white; padding: 10px; border-radius: 5px; line-height: 1.5; border: 1px solid #ccc; }
+        .legend i { width: 12px; height: 12px; float: left; margin-right: 8px; border-radius: 50%; border: 1px solid #999; }
     </style>
 </head>
 <body>
-    <header>
+    <div id="header">
         <h1>Colombia Resilience Map</h1>
-        <p>Analyzing Health Infrastructure vs. Historical Flood Impact (2001-2026)</p>
-    </header>
-    
-    <div class="controls">
-        <div class="control-group">
-            <label>Region/City:</label>
-            <select id="city-select">
-                <option value="all">National Overview</option>
-                <option value="BARRANQUILLA">Barranquilla</option>
-                <option value="CARTAGENA">Cartagena</option>
-                <option value="SANTA">Santa Marta</option>
-                <option value="RIOHACHA">Riohacha</option>
-                <option value="MONTERIA">Montería</option>
-                <option value="TUMACO">Tumaco</option>
-            </select>
-        </div>
-        <div class="control-group">
-            <label>Flood Year:</label>
-            <select id="year-select"><option value="all">All Historical Data</option></select>
-        </div>
-        <div class="control-group">
-            <label>Facility Level:</label>
-            <select id="category-select">
-                <option value="all">All Health Services</option>
-                <option value="High Complexity (Level 3/4)">High Complexity (Level 3/4)</option>
-                <option value="General Hospital (Level 2)">General Hospital (Level 2)</option>
-                <option value="Primary Care (Level 1)">Primary Care (Level 1)</option>
-                <option value="Specialized">Specialized Centers</option>
-                <option value="Emergency/First Response">Emergency & First Response</option>
-            </select>
-        </div>
-        <div class="control-group">
-            <label>Flood Severity:</label>
-            <select id="intensity-select">
-                <option value="1">Show All Events</option>
-                <option value="1.5">Moderate to Severe (1.5+)</option>
-                <option value="2">Severe Only (2.0+)</option>
-            </select>
-        </div>
+        <p>Health Facilities vs. Flood Risk</p>
     </div>
-
+    <div id="controls">
+        <select id="city-select"><option value="all">National View</option><option value="BARRANQUILLA">Barranquilla</option><option value="CARTAGENA">Cartagena</option><option value="SANTA">Santa Marta</option><option value="RIOHACHA">Riohacha</option><option value="MONTERIA">Montería</option><option value="TUMACO">Tumaco</option></select>
+        <select id="year-select"><option value="all">All Years</option></select>
+        <select id="category-select"><option value="all">All Facilities</option><option value="High Complexity (Level 3/4)">High Complexity</option><option value="General Hospital (Level 2)">General Hospital</option><option value="Primary Care (Level 1)">Primary Care</option><option value="Specialized">Specialized</option><option value="Emergency/First Response">Emergency</option></select>
+    </div>
     <div id="map"></div>
-
-    <div class="stats">
-        <div class="stat-box"><div class="stat-val" id="count-floods">0</div><div class="stat-label">Flood Records</div></div>
-        <div class="stat-box"><div class="stat-val" id="count-health">0</div><div class="stat-label">Health Facilities</div></div>
-        <div class="stat-box"><div class="stat-val" id="total-dead">0</div><div class="stat-label">Total Casualties</div></div>
+    <div id="stats">
+        <span>Floods: <span id="count-floods">0</span></span>
+        <span>Facilities: <span id="count-health">0</span></span>
+        <span>Fatalities: <span id="total-dead">0</span></span>
     </div>
 
     <script>
-        var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' });
-        var infra = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', { attribution: 'CARTO' });
-
-        var map = L.map('map', { center: [4.5, -74.0], zoom: 6, layers: [infra] });
-        L.control.layers({"Infrastructure (Human)": infra, "Satellite (Nature)": satellite}).addTo(map);
+        var map = L.map('map').setView([4.5, -74.0], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM' }).addTo(map);
 
         var floodLayer, healthLayer;
         var floodData, healthData;
 
-        var cityCoords = {
-            "BARRANQUILLA": [10.968, -74.781], "CARTAGENA": [10.391, -75.479],
-            "SANTA": [11.241, -74.199], "RIOHACHA": [11.544, -72.907], "MONTERIA": [8.748, -75.881],
-            "TUMACO": [1.806, -78.764]
-        };
+        var cityCoords = { "BARRANQUILLA": [10.968, -74.781], "CARTAGENA": [10.391, -75.479], "SANTA": [11.241, -74.199], "RIOHACHA": [11.544, -72.907], "MONTERIA": [8.748, -75.881], "TUMACO": [1.806, -78.764] };
 
-        function updateMap() {
-            var sYear = document.getElementById('year-select').value;
-            var minSev = parseFloat(document.getElementById('intensity-select').value);
+        function update() {
             var sCity = document.getElementById('city-select').value;
+            var sYear = document.getElementById('year-select').value;
             var sCat = document.getElementById('category-select').value;
 
-            if (sCity !== 'all') { map.setView(cityCoords[sCity], 13); } 
-            else if (sYear === 'all' && sCat === 'all' && minSev === 1) { /* Skip zoom on initial load if national */ }
+            if (sCity !== 'all') map.setView(cityCoords[sCity], 13);
 
             if (floodLayer) map.removeLayer(floodLayer);
-            var fCount = 0; var dCount = 0;
+            var fc = 0, dc = 0;
             floodLayer = L.geoJSON(floodData, {
-                filter: function(f) {
-                    var m = (sYear === 'all' || f.properties.year === sYear) && f.properties.severity >= minSev;
-                    if (m) { fCount++; dCount += f.properties.dead; }
+                filter: function(f) { 
+                    var m = (sYear === 'all' || f.properties.year === sYear);
+                    if (m) { fc++; dc += (f.properties.dead || 0); }
                     return m;
                 },
-                pointToLayer: function(f, l) {
-                    var color = f.properties.severity >= 2 ? '#ff4757' : '#ffa502';
-                    return L.circleMarker(l, { 
-                        radius: f.properties.severity * 10, 
-                        fillColor: color, 
-                        color: "#fff", 
-                        weight: 2, 
-                        fillOpacity: 0.6 
-                    });
-                },
-                onEachFeature: function(f, l) { 
-                    l.bindPopup(`<div style="font-family: sans-serif;">
-                        <h3 style="margin:0 0 5px; color:#e74c3c;">Flood: ${f.properties.area}</h3>
-                        <b>Year:</b> ${f.properties.year}<br>
-                        <b>Severity:</b> ${f.properties.severity}<br>
-                        <b>Casualties:</b> ${f.properties.dead}
-                    </div>`); 
-                }
+                pointToLayer: function(f, l) { return L.circleMarker(l, { radius: 10, fillColor: '#e74c3c', color: '#000', weight: 1, fillOpacity: 0.7 }); }
             }).addTo(map);
 
             if (healthLayer) map.removeLayer(healthLayer);
-            var hCount = 0;
+            var hc = 0;
             healthLayer = L.geoJSON(healthData, {
                 filter: function(f) {
-                    var cMatch = (sCat === 'all' || f.properties.category === sCat);
-                    var cityMatch = (sCity === 'all' || (f.properties.city && f.properties.city.toUpperCase().includes(sCity)));
-                    return cMatch && cityMatch;
+                    var m = (sCat === 'all' || f.properties.category === sCat) && (sCity === 'all' || (f.properties.city && f.properties.city.toUpperCase().includes(sCity)));
+                    if (m) hc++;
+                    return m;
                 },
-                pointToLayer: function(f, l) {
-                    hCount++;
-                    var sym = 'H';
-                    if (f.properties.category.includes('Primary')) sym = '+';
-                    else if (f.properties.category.includes('Emergency')) sym = '!';
-                    else if (f.properties.category === 'Specialized') sym = 'S';
-                    
-                    var bgColor = f.properties.color || '#95a5a6';
-                    var textColor = (bgColor === '#f1c40f' || bgColor === '#2ecc71') ? '#000' : '#fff';
-
-                    return L.marker(l, {
-                        icon: L.divIcon({ 
-                            className: 'health-icon', 
-                            html: sym, 
-                            iconSize: [20, 20], 
-                            iconAnchor: [10, 10],
-                            style: `background: ${bgColor}; color: ${textColor};` 
-                        })
-                    });
-                },
-                onEachFeature: function(f, l) { 
-                    l.bindPopup(`<div style="font-family: sans-serif;">
-                        <h3 style="margin:0 0 5px; color:#3498db;">${f.properties.name}</h3>
-                        <b>Type:</b> ${f.properties.category}<br>
-                        <b>Location:</b> ${f.properties.city || 'Unknown'}
-                    </div>`); 
-                }
+                pointToLayer: function(f, l) { return L.circleMarker(l, { radius: 6, fillColor: f.properties.color || '#3498db', color: '#fff', weight: 1, fillOpacity: 0.9 }); }
             }).addTo(map);
 
-            document.getElementById('count-floods').innerText = fCount;
-            document.getElementById('count-health').innerText = hCount;
-            document.getElementById('total-dead').innerText = dCount.toLocaleString();
+            document.getElementById('count-floods').innerText = fc;
+            document.getElementById('count-health').innerText = hc;
+            document.getElementById('total-dead').innerText = dc.toLocaleString();
         }
 
         Promise.all([
             fetch('colombia_floods.geojson').then(r => r.json()),
             fetch('colombia_health_detailed.geojson').then(r => r.json())
-        ]).then(([fData, hData]) => {
-            floodData = fData; healthData = hData;
-            var yearSelect = document.getElementById('year-select');
-            var years = [...new Set(fData.features.map(f => f.properties.year))].sort().reverse();
-            years.forEach(y => { 
-                var opt = document.createElement('option'); 
-                opt.value = opt.innerHTML = y; 
-                yearSelect.appendChild(opt); 
+        ]).then(([f, h]) => {
+            floodData = f; healthData = h;
+            var ys = document.getElementById('year-select');
+            [...new Set(f.features.map(x => x.properties.year))].sort().reverse().forEach(y => {
+                var o = document.createElement('option'); o.value = o.text = y; ys.add(o);
             });
-            updateMap();
-        }).catch(err => console.error("Error loading map data:", err));
+            update();
+        }).catch(e => alert("Error loading data: " + e));
 
-        ['city-select', 'year-select', 'category-select', 'intensity-select'].forEach(id => {
-            document.getElementById(id).addEventListener('change', updateMap);
-        });
+        document.querySelectorAll('select').forEach(s => s.addEventListener('change', update));
 
         var legend = L.control({position: 'bottomright'});
         legend.onAdd = function() {
             var div = L.DomUtil.create('div', 'legend');
-            div.innerHTML = '<strong>Health Infrastructure</strong>' +
-                            '<i style="background: #e74c3c"></i> High Complexity (H)<br>' +
-                            '<i style="background: #e67e22"></i> General Hospital (H)<br>' +
-                            '<i style="background: #2ecc71"></i> Primary Care (+)<br>' +
-                            '<i style="background: #3498db"></i> Specialized (S)<br>' +
-                            '<i style="background: #f1c40f"></i> Emergency (!)<br>' +
-                            '<strong style="margin-top:10px;">Flood Intensity</strong>' +
-                            '<i style="background: #ff4757; border-radius: 2px;"></i> Severe (2.0+)<br>' +
-                            '<i style="background: #ffa502; border-radius: 2px;"></i> Moderate (1.0+)';
+            div.innerHTML = '<b>Legend</b><br>' +
+                '<i style="background: #e74c3c"></i> Flood Event<br>' +
+                '<i style="background: #3498db"></i> Health Facility';
             return div;
         };
         legend.addTo(map);
