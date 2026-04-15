@@ -1,17 +1,20 @@
-# ICT4DTumaco
+# Colombia: Flood Risks & Health Infrastructure
 
-A simple web map of Tumaco, Nariño, Colombia, built with Leaflet.js and OpenStreetMap.
+A unified interactive dashboard mapping the intersection of environmental risk and emergency infrastructure across Colombia (2001-2026).
 
-## Available Maps
-- **[General Map (Tumaco Overview)](https://dicocorobe.github.io/ICT4DTumaco/)**: A broad view of the city and major mangrove zones.
-- **[Comuna 5 Focus (Iberia, Victoria & Obrero)](https://dicocorobe.github.io/ICT4DTumaco/comuna5.html)**: A detailed look at these neighborhoods and their specific mangrove land limits.
+## [View the Map](https://dicocorobe.github.io/ICT4DTumaco/)
 
-## Features
-- Full-screen interactive maps
-- **Mangrove areas** (highlighted in green)
-- **Neighborhood markers** (with labels and popups)
-- Easy navigation between views
-- Mobile-responsive
+## Key Features
+- **Integrated View**: Combines 25 years of flood history with location data for hospitals and clinics.
+- **Dynamic Filters**:
+    - **City Focus**: Jump to Barranquilla, Cartagena, Santa Marta, Riohacha, or Montería.
+    - **Year Range**: Filter flood events by specific years.
+    - **Intensity**: Filter events by severity (Low, Medium, High).
+- **Satellite Layers**: Toggle between high-resolution satellite imagery (Nature) and infrastructure maps (Human/Labels).
+- **Data-Driven**: Uses GeoJSON for high-precision marker rendering.
 
-## Deployment
-This map is hosted on GitHub Pages. To view it, visit the repository's GitHub Pages URL.
+## Technology
+- Leaflet.js
+- OpenStreetMap / Esri / CARTO
+- Overpass API (Health Data)
+- GitHub Pages
