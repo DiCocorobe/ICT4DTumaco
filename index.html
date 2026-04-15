@@ -92,9 +92,11 @@
             var minSev = parseFloat(document.getElementById('intensity-select').value);
             var selectedCity = document.getElementById('city-select').value;
 
-            // Update View
+            // Update View: If "all", zoom out to show the whole country.
             if (selectedCity !== 'all') {
                 map.setView(cityCoords[selectedCity], 13);
+            } else {
+                map.setView([4.5, -74.0], 6);
             }
 
             // Update Floods
