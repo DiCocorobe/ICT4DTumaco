@@ -1,22 +1,21 @@
-# Colombia: Flood Risks & Health Infrastructure
+# Colombia: Flood Risks & Health Infrastructure Resilience
 
-A unified interactive dashboard mapping the intersection of environmental risk and emergency infrastructure across Colombia (2001-2026).
+A unified data-driven project mapping the intersection of environmental risk and emergency infrastructure across Colombia (2001-2026).
 
-## [View the Map](https://dicocorobe.github.io/ICT4DTumaco/)
-## [View the Flood Dashboard](https://dicocorobe.github.io/ICT4DTumaco/dashboard.html)
+## [Project Landing Page](https://dicocorobe.github.io/ICT4DTumaco/)
 
-## Key Features
-- **Integrated View**: Combines 25 years of flood history with location data for hospitals and clinics.
-- **Dynamic Filters**:
-    - **City Focus**: Jump to Barranquilla, Cartagena, Santa Marta, Riohacha, or Montería.
-    - **Year Range**: Filter flood events by specific years.
-    - **Intensity**: Filter events by severity (Low, Medium, High).
-- **Satellite Layers**: Toggle between high-resolution satellite imagery (Nature) and infrastructure maps (Human/Labels).
-- **Data-Driven**: Uses GeoJSON for high-precision marker rendering.
+### Key Tools & Visualizations
+- **[Interactive Infrastructure Map](https://dicocorobe.github.io/ICT4DTumaco/map.html)**: 25 years of flood history mapped alongside hospital and clinic locations with dynamic filters.
+- **[Resilience Analysis Dashboard](https://dicocorobe.github.io/ICT4DTumaco/resilience.html)**: Advanced spatial categorization including Health System Stress-Tests, Human Cost scaling, and Nature's Shield (Mangrove) protection zones.
+- **[Global Flood Statistics](https://dicocorobe.github.io/ICT4DTumaco/dashboard.html)**: High-level data visualization of flood frequency, country impact, and humanitarian displacement.
 
-## Techno
-logy
-- Leaflet.js
-- OpenStreetMap / Esri / CARTO
-- Overpass API (Health Data)
-- GitHub Pages
+### Data Registry
+- **Flood Events**: Dartmouth Flood Observatory (DFO) & HDX.
+- **Health Infrastructure**: OpenStreetMap (via Overpass API).
+- **Mangrove Coverage**: Local geospatial assessments.
+
+### Technology Stack
+- **Leaflet.js**: Geospatial mapping and GeoJSON rendering.
+- **Chart.js**: Statistical data visualization.
+- **PapaParse**: CSV data processing.
+- **GitHub Pages**: Static hosting and deployment.

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colombia: Flood Risk Analysis</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #212529; }
+        #header { background: #003366; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #controls { background: white; padding: 15px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid #dee2e6; position: sticky; top: 0; z-index: 1000; }
+        #map { height: 75vh; width: 100%; }
+        #stats { background: #fff; padding: 15px; display: flex; justify-content: space-around; font-weight: bold; border-top: 1px solid #dee2e6; font-size: 1.1em; }
+        .legend { background: white; padding: 12px; border-radius: 5px; line-height: 1.6; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-size: 12px; border: 1px solid #ddd; }
+        .legend i { width: 14px; height: 14px; float: left; margin-right: 10px; border-radius: 50%; border: 1px solid #fff; }
+        select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ced4da; font-size: 14px; background: white; }
+        .btn-home { position: absolute; left: 20px; top: 25px; color: white; text-decoration: none; font-size: 0.85em; border: 1px solid rgba(255,255,255,0.5); padding: 5px 10px; border-radius: 4px; transition: 0.3s; }
+        .btn-home:hover { background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <a href="index.html" class="btn-home">← Back to Map</a>
+        <h1>Flood Risk Analysis Dashboard</h1>
+        <p>Advanced categorization of historical events (2001-2026)</p>
+    </div>
+    <div id="controls">
+        <div style="display:flex; flex-direction:column; align-items:center;">
+            <label style="font-size:0.75em; margin-bottom:4px; font-weight:bold; color: #666;">ANALYSIS LENS</label>
+            <select id="lens-select">
+                <option value="impact">💀 Human Impact (Fatality Scale)</option>
+                <option value="severity">⚠️ Disaster Severity Index</option>
+                <option value="cause">🔍 Causality (Trigger Analysis)</option>
+            </select>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center;">
+            <label style="font-size:0.75em; margin-bottom:4px; font-weight:bold; color: #666;">REGION</label>
+            <select id="city-select">
+                <option value="all">National View</option>
+                <option value="BARRANQUILLA">Barranquilla</option>
+                <option value="CARTAGENA">Cartagena</option>
+                <option value="SANTA">Santa Marta</option>
+                <option value="RIOHACHA">Riohacha</option>
+                <option value="MONTERIA">Montería</option>
+                <option value="TUMACO">Tumaco</option>
+            </select>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center;">
+            <label style="font-size:0.75em; margin-bottom:4px; font-weight:bold; color: #666;">YEAR</label>
+            <select id="year-select"><option value="all">All Records</option></select>
+        </div>
+    </div>
+
+    <div id="map"></div>
+    
+    <div id="stats">
+        <span>🌊 Total Events: <span id="count-floods" style="color:#d9534f">0</span></span>
+        <span>💀 Cumulative Fatalities: <span id="total-dead" style="color:#333">0</span></span>
+        <span>📏 Area Affected: <span id="total-area" style="color:#0275d8">0 km²</span></span>
+    </div>
+
+    <script>
+        var map = L.map('map').setView([4.5, -74.0], 6);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
+        }).addTo(map);
+
+        var floodLayer, floodData;
+        var cityCoords = { 
+            "BARRANQUILLA": [10.968, -74.781], "CARTAGENA": [10.391, -75.479], 
+            "SANTA": [11.241, -74.199], "RIOHACHA": [11.544, -72.907], 
+            "MONTERIA": [8.748, -75.881], "TUMACO": [1.806, -78.764] 
+        };
+
+        function getCauseColor(cause) {
+            if (!cause) return '#999';
+            var c = cause.toLowerCase();
+            if (c.includes('heavy')) return '#0044cc';
+            if (c.includes('torrential')) return '#cc0000';
+            if (c.includes('overflow') || c.includes('river')) return '#0099cc';
+            if (c.includes('monsoon')) return '#9900cc';
+            return '#555';
+        }
+
+        function update() {
+            var sLens = document.getElementById('lens-select').value;
+            var sCity = document.getElementById('city-select').value;
+            var sYear = document.getElementById('year-select').value;
+
+            if (sCity !== 'all') map.setView(cityCoords[sCity], 12);
+            else map.setView([4.5, -74.0], 6);
+
+            if (floodLayer) map.removeLayer(floodLayer);
+            var fc = 0, dc = 0, ac = 0;
+
+            floodLayer = L.geoJSON(floodData, {
+                filter: function(f) { 
+                    var m = (sYear === 'all' || f.properties.year == sYear);
+                    if (m) { 
+                        fc++; 
+                        dc += (Number(f.properties.dead) || 0); 
+                        ac += (Number(f.properties.area) || 0);
+                    }
+                    return m;
+                },
+                pointToLayer: function(f, l) {
+                    var radius = 8, color = '#d9534f', opacity = 0.7;
+                    
+                    if (sLens === 'impact') {
+                        var deaths = Number(f.properties.dead) || 0;
+                        radius = Math.sqrt(deaths) * 4 + 6;
+                        color = deaths > 50 ? '#4a0e0e' : (deaths > 10 ? '#a94442' : '#d9534f');
+                    } else if (sLens === 'severity') {
+                        var sev = Number(f.properties.severity) || 1;
+                        color = sev >= 2.0 ? '#cc0000' : (sev >= 1.5 ? '#f0ad4e' : '#5bc0de');
+                        radius = sev * 7;
+                    } else if (sLens === 'cause') {
+                        color = getCauseColor(f.properties.cause);
+                        radius = 9;
+                    }
+                    
+                    return L.circleMarker(l, { radius: radius, fillColor: color, color: '#fff', weight: 1, fillOpacity: opacity });
+                },
+                onEachFeature: function(f, l) {
+                    l.bindPopup(`<b>Flood Event (${f.properties.year})</b><br>
+                                Cause: ${f.properties.cause || 'Unknown'}<br>
+                                Fatalities: ${f.properties.dead}<br>
+                                Severity: ${f.properties.severity}<br>
+                                Area: ${f.properties.area} km²`);
+                }
+            }).addTo(map);
+
+            document.getElementById('count-floods').innerText = fc;
+            document.getElementById('total-dead').innerText = dc.toLocaleString();
+            document.getElementById('total-area').innerText = (ac/1000000).toFixed(2) + "M";
+            updateLegend(sLens);
+        }
+
+        function updateLegend(lens) {
+            document.querySelectorAll('.legend').forEach(el => el.remove());
+            var legend = L.control({position: 'bottomright'});
+            legend.onAdd = function() {
+                var div = L.DomUtil.create('div', 'legend');
+                var content = '<b>Analysis Legend</b><br>';
+                if (lens === 'impact') {
+                    content += '<i style="background: #4a0e0e"></i> Critical (>50 dead)<br>';
+                    content += '<i style="background: #a94442"></i> Major (>10 dead)<br>';
+                    content += '<i style="background: #d9534f"></i> Minor/Standard<br>';
+                } else if (lens === 'severity') {
+                    content += '<i style="background: #cc0000"></i> High Severity (2.0+)<br>';
+                    content += '<i style="background: #f0ad4e"></i> Medium Severity (1.5+)<br>';
+                    content += '<i style="background: #5bc0de"></i> Low Severity (1.0)<br>';
+                } else if (lens === 'cause') {
+                    content += '<i style="background: #cc0000"></i> Torrential Rain<br>';
+                    content += '<i style="background: #0044cc"></i> Heavy Rain<br>';
+                    content += '<i style="background: #0099cc"></i> River Overflow<br>';
+                    content += '<i style="background: #555"></i> Other Causes<br>';
+                }
+                div.innerHTML = content;
+                return div;
+            };
+            legend.addTo(map);
+        }
+
+        fetch('colombia_floods.geojson')
+            .then(r => r.json())
+            .then(data => {
+                floodData = data;
+                var ys = document.getElementById('year-select');
+                var years = [...new Set(data.features.map(x => x.properties.year))].sort().reverse();
+                years.forEach(y => {
+                    var o = document.createElement('option'); o.value = o.text = y; ys.add(o);
+                });
+                update();
+            }).catch(e => console.error("Error loading flood data:", e));
+
+        document.querySelectorAll('select').forEach(s => s.addEventListener('change', update));
+    </script>
+</body>
+</html>

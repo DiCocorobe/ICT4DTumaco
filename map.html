@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colombia Health & Flood Map (Simplified)</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #f4f4f4; }
+        #header { background: #2c3e50; color: white; padding: 15px; text-align: center; }
+        #controls { background: white; padding: 10px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; border-bottom: 1px solid #ddd; }
+        #map { height: 70vh; width: 100%; }
+        #stats { background: white; padding: 15px; display: flex; justify-content: space-around; font-weight: bold; border-top: 1px solid #ddd; }
+        .legend { background: white; padding: 10px; border-radius: 5px; line-height: 1.5; border: 1px solid #ccc; }
+        .legend i { width: 12px; height: 12px; float: left; margin-right: 8px; border-radius: 50%; border: 1px solid #999; }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Colombia Resilience Map</h1>
+        <p>Health Facilities vs. Flood Risk | <a href="resilience.html" style="color: #3498db; text-decoration: none; font-weight: bold;">Advanced Flood Analysis →</a></p>
+    </div>
+    <div id="controls">
+        <select id="city-select"><option value="all">National View</option><option value="BARRANQUILLA">Barranquilla</option><option value="CARTAGENA">Cartagena</option><option value="SANTA">Santa Marta</option><option value="RIOHACHA">Riohacha</option><option value="MONTERIA">Montería</option><option value="TUMACO">Tumaco</option></select>
+        <select id="year-select"><option value="all">All Years</option></select>
+        <select id="category-select"><option value="all">All Facilities</option><option value="High Complexity (Level 3/4)">High Complexity</option><option value="General Hospital (Level 2)">General Hospital</option><option value="Primary Care (Level 1)">Primary Care</option><option value="Specialized">Specialized</option><option value="Emergency/First Response">Emergency</option></select>
+    </div>
+    <div id="map"></div>
+    <div id="stats">
+        <span>Floods: <span id="count-floods">0</span></span>
+        <span>Facilities: <span id="count-health">0</span></span>
+        <span>Fatalities: <span id="total-dead">0</span></span>
+    </div>
+
+    <script>
+        var map = L.map('map').setView([4.5, -74.0], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM' }).addTo(map);
+
+        var floodLayer, healthLayer;
+        var floodData, healthData;
+
+        var cityCoords = { "BARRANQUILLA": [10.968, -74.781], "CARTAGENA": [10.391, -75.479], "SANTA": [11.241, -74.199], "RIOHACHA": [11.544, -72.907], "MONTERIA": [8.748, -75.881], "TUMACO": [1.806, -78.764] };
+
+        function update() {
+            var sCity = document.getElementById('city-select').value;
+            var sYear = document.getElementById('year-select').value;
+            var sCat = document.getElementById('category-select').value;
+
+            if (sCity !== 'all') map.setView(cityCoords[sCity], 13);
+
+            if (floodLayer) map.removeLayer(floodLayer);
+            var fc = 0, dc = 0;
+            floodLayer = L.geoJSON(floodData, {
+                filter: function(f) { 
+                    var m = (sYear === 'all' || f.properties.year === sYear);
+                    if (m) { fc++; dc += (f.properties.dead || 0); }
+                    return m;
+                },
+                pointToLayer: function(f, l) { return L.circleMarker(l, { radius: 10, fillColor: '#e74c3c', color: '#000', weight: 1, fillOpacity: 0.7 }); }
+            }).addTo(map);
+
+            if (healthLayer) map.removeLayer(healthLayer);
+            var hc = 0;
+            healthLayer = L.geoJSON(healthData, {
+                filter: function(f) {
+                    var m = (sCat === 'all' || f.properties.category === sCat) && (sCity === 'all' || (f.properties.city && f.properties.city.toUpperCase().includes(sCity)));
+                    if (m) hc++;
+                    return m;
+                },
+                pointToLayer: function(f, l) { return L.circleMarker(l, { radius: 6, fillColor: f.properties.color || '#3498db', color: '#fff', weight: 1, fillOpacity: 0.9 }); }
+            }).addTo(map);
+
+            document.getElementById('count-floods').innerText = fc;
+            document.getElementById('count-health').innerText = hc;
+            document.getElementById('total-dead').innerText = dc.toLocaleString();
+        }
+
+        Promise.all([
+            fetch('colombia_floods.geojson').then(r => r.json()),
+            fetch('colombia_health_detailed.geojson').then(r => r.json())
+        ]).then(([f, h]) => {
+            floodData = f; healthData = h;
+            var ys = document.getElementById('year-select');
+            [...new Set(f.features.map(x => x.properties.year))].sort().reverse().forEach(y => {
+                var o = document.createElement('option'); o.value = o.text = y; ys.add(o);
+            });
+            update();
+        }).catch(e => alert("Error loading data: " + e));
+
+        document.querySelectorAll('select').forEach(s => s.addEventListener('change', update));
+
+        var legend = L.control({position: 'bottomright'});
+        legend.onAdd = function() {
+            var div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = '<b>Legend</b><br>' +
+                '<i style="background: #e74c3c"></i> Flood Event<br>' +
+                '<i style="background: #3498db"></i> Health Facility';
+            return div;
+        };
+        legend.addTo(map);
+    </script>
+</body>
+</html>
