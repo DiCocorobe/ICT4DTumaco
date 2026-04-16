@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Data Previewer | ICT4D</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #1a252f; margin-top: 0; }
+        .upload-box { border: 2px dashed #3498db; padding: 40px; text-align: center; border-radius: 8px; margin-bottom: 20px; background: #ebf5fb; cursor: pointer; transition: 0.3s; }
+        .upload-box:hover { background: #d6eaf8; }
+        #csv-file { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background: #3498db; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .back-btn { display: inline-block; margin-bottom: 20px; color: #3498db; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">← Back to Landing Page</a>
+        <h1>CSV Data Explorer</h1>
+        <p>Upload your own flood or health dataset (CSV format) to preview the raw data before integration.</p>
+        
+        <label for="csv-file" class="upload-box" id="drop-zone">
+            <strong>Click to select a CSV file</strong> or drag and drop here
+            <input type="file" id="csv-file" accept=".csv">
+        </label>
+
+        <div id="table-container" style="overflow-x: auto;">
+            <!-- Table will be generated here -->
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('csv-file');
+        const container = document.getElementById('table-container');
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        generateTable(results.data);
+                    }
+                });
+            }
+        });
+
+        function generateTable(data) {
+            if (data.length === 0) return;
+            let html = '<table><thead><tr>';
+            Object.keys(data[0]).forEach(key => {
+                html += `<th>${key}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            data.slice(0, 50).forEach(row => {
+                html += '<tr>';
+                Object.values(row).forEach(val => {
+                    html += `<td>${val}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            if (data.length > 50) html += `<p style="margin-top:10px; color:#666;">Showing first 50 rows of ${data.length} total.</p>`;
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

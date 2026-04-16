@@ -9,6 +9,7 @@
             --primary: #1a252f;
             --secondary: #3498db;
             --accent: #e74c3c;
+            --v0-color: #6a1b9a;
             --bg: #f8f9fa;
             --text: #333;
             --card-bg: #fff;
@@ -77,7 +78,7 @@
 
         header.hero p {
             font-size: 1.1rem;
-            max-width: 700px;
+            max-width: 800px;
             margin: 0 auto;
             opacity: 0.9;
         }
@@ -110,7 +111,7 @@
             transition: transform 0.3s, box-shadow 0.3s;
             display: flex;
             flex-direction: column;
-            border-top: 4px solid var(--secondary);
+            border-top: 5px solid var(--secondary);
         }
 
         .card:hover {
@@ -121,12 +122,16 @@
         .card h3 {
             margin-top: 0;
             color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .card p {
             flex-grow: 1;
             color: #666;
             margin-bottom: 1.5rem;
+            font-size: 0.95rem;
         }
 
         .btn {
@@ -144,8 +149,8 @@
             opacity: 0.9;
         }
 
-        .btn.accent {
-            background: var(--accent);
+        .btn.v0 {
+            background: var(--v0-color);
         }
 
         /* Dataset Registry */
@@ -194,47 +199,57 @@
     <nav>
         <a href="#" class="logo">ICT4D: Colombia Resilience</a>
         <ul>
-            <li><a href="map.html">Interactive Map</a></li>
-            <li><a href="resilience.html">Resilience Analysis</a></li>
-            <li><a href="dashboard.html">Flood Dashboard</a></li>
-            <li><a href="#">CSV Upload App (Coming Soon)</a></li>
+            <li><a href="map.html">Infrastructure Map</a></li>
+            <li><a href="dashboard.html">Flood Charts</a></li>
+            <li><a href="upload.html">CSV Previewer</a></li>
+            <li><a href="https://v0.app/chat/visualize-dataset-on-map-dCU44nUvhM9" target="_blank">v0 Visualizer</a></li>
         </ul>
     </nav>
 
     <header class="hero">
-        <h1>Bridging Risk & Healthcare</h1>
-        <p>A data-driven platform analyzing 25 years of flood events and their intersection with Colombia's health infrastructure to improve emergency resilience.</p>
+        <h1>Colombia Resilience & Risk Project</h1>
+        <p>Analyzing 25 years of flood risk alongside healthcare accessibility to build a more resilient future. Explore our interactive toolset designed for disaster mitigation and regional planning.</p>
     </header>
 
     <main>
         <div class="section-title">
-            <h2>Explore Our Tools</h2>
-            <p>Select a visualization lens to interact with the data</p>
+            <h2>Analytical Toolset</h2>
+            <p>Interactive modules for spatial, statistical, and natural protection analysis</p>
         </div>
 
         <div class="grid">
-            <div class="card">
-                <h3>Interactive Infrastructure Map</h3>
-                <p>Locate hospitals and clinics across Colombia and visualize their proximity to historical flood zones. Filter by city, year, and facility type.</p>
-                <a href="map.html" class="btn">Launch Map</a>
+            <!-- 1. The Map -->
+            <div class="card" style="border-top-color: var(--secondary);">
+                <h3>📍 Interactive Infrastructure Map</h3>
+                <p>Locate Colombian hospitals and clinics in relation to historical flood zones. Filter by city, year, and complexity level to assess regional coverage.</p>
+                <a href="map.html" class="btn">Open Interactive Map</a>
             </div>
             
-            <div class="card">
-                <h3>Resilience Analysis</h3>
-                <p>Deep-dive into advanced analytics: Health System Stress-Tests, Human Cost scaling, and Nature's Shield (Mangrove protection) visualizations.</p>
-                <a href="resilience.html" class="btn accent">Explore Resilience</a>
+            <!-- 2. Global Flood Dashboard -->
+            <div class="card" style="border-top-color: #2ecc71;">
+                <h3>📊 Global Flood Dashboard</h3>
+                <p>View high-level statistical analysis of historical flood data. Explore charts on displacement, country frequency, and disaster severity trends.</p>
+                <a href="dashboard.html" class="btn" style="background: #2ecc71;">View Charts Dashboard</a>
             </div>
 
-            <div class="card" style="border-top-color: #2ecc71;">
-                <h3>Global Flood Dashboard</h3>
-                <p>View high-level statistical charts analyzing flood frequency, country rankings, and humanitarian impact over the last three decades.</p>
-                <a href="dashboard.html" class="btn" style="background: #2ecc71;">View Dashboard</a>
+            <!-- 3. V0 Visualization -->
+            <div class="card" style="border-top-color: var(--v0-color);">
+                <h3>✨ v0 Dataset Visualizer</h3>
+                <p>A specialized, AI-augmented visualization of our flood datasets. Explore advanced mapping layouts and interactive AI-driven insights via the v0 platform.</p>
+                <a href="https://v0.app/chat/visualize-dataset-on-map-dCU44nUvhM9" target="_blank" class="btn v0">View on v0.app</a>
+            </div>
+
+            <!-- 4. CSV Upload App -->
+            <div class="card" style="border-top-color: var(--accent);">
+                <h3>📁 CSV Data Explorer</h3>
+                <p>A web-based tool to preview raw datasets. Upload any CSV file to inspect its structure and metadata before integrating it into our spatial models.</p>
+                <a href="upload.html" class="btn accent">Launch Previewer</a>
             </div>
         </div>
 
         <div class="section-title" id="data">
             <h2>Dataset Registry</h2>
-            <p>Comprehensive metadata for the geospatial and tabular records used in this project.</p>
+            <p>Open data and metadata used in the construction of this resilience platform</p>
         </div>
 
         <div class="registry">
@@ -261,7 +276,7 @@
                         <td>April 2026</td>
                     </tr>
                     <tr>
-                        <td>Mangrove Cover (Tumaco Region)</td>
+                        <td>Mangrove Geospatial Cover</td>
                         <td>Local Environmental Assessment</td>
                         <td>GeoJSON</td>
                         <td>April 2026</td>
@@ -278,7 +293,7 @@
     </main>
 
     <footer>
-        <p>© 2026 ICT4D Tumaco Resilience Project. Built with Leaflet.js, Chart.js, and Open Data.</p>
+        <p>© 2026 ICT4D Tumaco Resilience Project. Powered by OpenStreetMap, DFO, and Humanitarian Data Exchange.</p>
     </footer>
 
 </body>
