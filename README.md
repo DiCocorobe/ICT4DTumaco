@@ -3,6 +3,7 @@
 A unified interactive dashboard mapping the intersection of environmental risk and emergency infrastructure across Colombia (2001-2026).
 
 ## [View the Map](https://dicocorobe.github.io/ICT4DTumaco/)
+## [View the Flood Dashboard](https://dicocorobe.github.io/ICT4DTumaco/dashboard.html)
 
 ## Key Features
 - **Integrated View**: Combines 25 years of flood history with location data for hospitals and clinics.
@@ -13,7 +14,8 @@ A unified interactive dashboard mapping the intersection of environmental risk a
 - **Satellite Layers**: Toggle between high-resolution satellite imagery (Nature) and infrastructure maps (Human/Labels).
 - **Data-Driven**: Uses GeoJSON for high-precision marker rendering.
 
-## Technology
+## Techno
+logy
 - Leaflet.js
 - OpenStreetMap / Esri / CARTO
 - Overpass API (Health Data)

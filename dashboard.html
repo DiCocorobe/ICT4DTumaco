@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Flood Dashboard</title>
+    <!-- Chart.js for making charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse for reading the CSV file -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            font-size: 1.2rem;
+            color: #333;
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        @media (max-width: 600px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Global Flood Archive Dashboard</h1>
+        <p>Analyzing historical flood data (1985-Present)</p>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- Chart 1: Top 20 Countries -->
+        <div class="card">
+            <h2>Top 20 Countries by Flood Events</h2>
+            <div class="chart-container">
+                <canvas id="countryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 2: Events per Year -->
+        <div class="card">
+            <h2>Flood Events per Year</h2>
+            <div class="chart-container">
+                <canvas id="yearChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 3: Events by Category -->
+        <div class="card">
+            <h2>Flood Events by Category</h2>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 4: Displaced by Severity -->
+        <div class="card">
+            <h2>Total Displaced People by Severity</h2>
+            <div class="chart-container">
+                <canvas id="severityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File path to your CSV
+        const csvFile = 'floodarchive_cleaned.csv';
+
+        // Load and parse the CSV data
+        Papa.parse(csvFile, {
+            download: true,
+            header: true,
+            dynamicTyping: true,
+            complete: function(results) {
+                const data = results.data;
+                processData(data);
+            }
+        });
+
+        function processData(data) {
+            // 1. Flood events by country (Top 20)
+            const countryCounts = {};
+            data.forEach(row => {
+                if (row.Country) {
+                    countryCounts[row.Country] = (countryCounts[row.Country] || 0) + 1;
+                }
+            });
+            const topCountries = Object.entries(countryCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 20);
+
+            createBarChart('countryChart', 
+                topCountries.map(d => d[0]), 
+                topCountries.map(d => d[1]), 
+                'Number of Events', '#3498db');
+
+            // 2. Flood events per year
+            const yearCounts = {};
+            data.forEach(row => {
+                if (row.Year) {
+                    yearCounts[row.Year] = (yearCounts[row.Year] || 0) + 1;
+                }
+            });
+            const years = Object.keys(yearCounts).sort();
+            
+            createLineChart('yearChart', 
+                years, 
+                years.map(y => yearCounts[y]), 
+                'Events per Year', '#e67e22');
+
+            // 3. Events by category (categorised_reason)
+            const categoryCounts = {};
+            data.forEach(row => {
+                const cat = row.categorised_reason || 'Unknown';
+                categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+            });
+            const categories = Object.entries(categoryCounts).sort((a,b) => b[1] - a[1]);
+
+            createBarChart('categoryChart', 
+                categories.map(d => d[0]), 
+                categories.map(d => d[1]), 
+                'Number of Events', '#9b59b6');
+
+            // 4. Total displaced by Severity
+            const severityDisplaced = {};
+            data.forEach(row => {
+                const sev = row.Severity || 'Unknown';
+                const disp = parseInt(row.Displaced) || 0;
+                severityDisplaced[sev] = (severityDisplaced[sev] || 0) + disp;
+            });
+            const severities = Object.keys(severityDisplaced).sort();
+
+            createBarChart('severityChart', 
+                severities, 
+                severities.map(s => severityDisplaced[s]), 
+                'Total Displaced', '#e74c3c');
+        }
+
+        function createBarChart(elementId, labels, data, label, color) {
+            new Chart(document.getElementById(elementId), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: color
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function createLineChart(elementId, labels, data, label, color) {
+            new Chart(document.getElementById(elementId), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: color,
+                        fill: false,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
