@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colombia Resilience Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #212529; }
         #header { background: #1a252f; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -14,21 +17,25 @@
         #stats { background: #fff; padding: 15px; display: flex; justify-content: space-around; font-weight: bold; border-top: 1px solid #dee2e6; font-size: 1.1em; }
         .legend { background: white; padding: 12px; border-radius: 5px; line-height: 1.6; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-size: 12px; border: 1px solid #ddd; }
         .legend i { width: 14px; height: 14px; float: left; margin-right: 10px; border-radius: 50%; border: 1px solid #fff; }
-        .legend .shape { display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: middle; }
-        .legend .cross { background: currentColor; clip-path: polygon(35% 0%, 65% 0%, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0% 65%, 0% 35%, 35% 35%); }
-        .legend .triangle { background: currentColor; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
         select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ced4da; font-size: 14px; background: white; cursor: pointer; }
         .btn-home { position: absolute; left: 20px; top: 25px; color: white; text-decoration: none; font-size: 0.85em; border: 1px solid rgba(255,255,255,0.5); padding: 5px 10px; border-radius: 4px; transition: 0.3s; }
-        .btn-home:hover { background: rgba(255,255,255,0.1); border-color: white; }
         .label-group { display: flex; flex-direction: column; align-items: flex-start; }
         .label-group label { font-size: 0.7em; margin-bottom: 4px; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Custom Cluster Styles */
+        .marker-cluster-small { background-color: rgba(181, 226, 140, 0.6); }
+        .marker-cluster-small div { background-color: rgba(110, 204, 57, 0.6); }
+        .marker-cluster-medium { background-color: rgba(241, 211, 87, 0.6); }
+        .marker-cluster-medium div { background-color: rgba(240, 194, 12, 0.6); }
+        .marker-cluster-large { background-color: rgba(253, 156, 115, 0.6); }
+        .marker-cluster-large div { background-color: rgba(241, 128, 23, 0.6); }
     </style>
 </head>
 <body>
     <div id="header">
         <a href="index.html" class="btn-home">← Home</a>
         <h1>Colombia Resilience Map</h1>
-        <p>Dynamic Visibility: Zoom in for local detail | Triangles = Floods, Crosses = Health</p>
+        <p>Decluttered View: Facilities are clustered by region. Zoom in to see individual sites.</p>
     </div>
     
     <div id="controls">
@@ -70,42 +77,23 @@
             attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(map);
 
-        var floodLayer, healthLayer;
+        var floodCluster = L.markerClusterGroup({ disableClusteringAtZoom: 14 });
+        var healthCluster = L.markerClusterGroup({ disableClusteringAtZoom: 13 });
         var floodData, healthData;
-
-        // Custom Triangle Marker for Floods
-        function getTriangleIcon(color, size) {
-            return L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background-color:${color}; width:${size}px; height:${size}px; clip-path:polygon(50% 0%, 0% 100%, 100% 100%); border:1px solid white;"></div>`,
-                iconSize: [size, size],
-                iconAnchor: [size/2, size/2]
-            });
-        }
-
-        // Custom Cross Marker for Health Facilities
-        function getCrossIcon(color, size) {
-            return L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background-color:${color}; width:${size}px; height:${size}px; clip-path:polygon(35% 0%, 65% 0%, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0% 65%, 0% 35%, 35% 35%); border:0.5px solid white;"></div>`,
-                iconSize: [size, size],
-                iconAnchor: [size/2, size/2]
-            });
-        }
 
         function update() {
             var sLens = document.getElementById('lens-select').value;
             var sYear = document.getElementById('year-select').value;
             var sComp = document.getElementById('complexity-select').value;
-            var zoom = map.getZoom();
 
-            if (floodLayer) map.removeLayer(floodLayer);
-            if (healthLayer) map.removeLayer(healthLayer);
+            // Clear Clusters
+            floodCluster.clearLayers();
+            healthCluster.clearLayers();
 
             var fc = 0, hc = 0, dc = 0;
 
-            // 1. Render Floods (Triangles)
-            floodLayer = L.geoJSON(floodData, {
+            // 1. Process Floods
+            var floodMarkers = L.geoJSON(floodData, {
                 filter: function(f) { 
                     var m = (sYear === 'all' || f.properties.year == sYear);
                     if (m && sLens !== 'vulnerability') { fc++; dc += (Number(f.properties.dead) || 0); }
@@ -113,18 +101,17 @@
                 },
                 pointToLayer: function(f, l) {
                     var sev = Number(f.properties.severity) || 1;
-                    var baseSize = zoom * 1.5;
-                    var size = sLens === 'severity' ? baseSize * sev : baseSize;
                     var color = sLens === 'severity' ? (sev >= 2.0 ? '#8b0000' : (sev >= 1.5 ? '#e67e22' : '#f1c40f')) : '#e74c3c';
-                    return L.marker(l, { icon: getTriangleIcon(color, Math.max(size, 6)) });
+                    return L.circleMarker(l, { radius: 8, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.8 });
                 },
                 onEachFeature: function(f, l) {
                     l.bindPopup(`<b>Flood Event (${f.properties.year})</b><br>Severity: ${f.properties.severity}<br>Fatalities: ${f.properties.dead}`);
                 }
-            }).addTo(map);
+            });
+            floodCluster.addLayer(floodMarkers);
 
-            // 2. Render Health Facilities (Crosses)
-            healthLayer = L.geoJSON(healthData, {
+            // 2. Process Health Facilities
+            var healthMarkers = L.geoJSON(healthData, {
                 filter: function(f) {
                     var m = (sComp === 'all' || f.properties.category === sComp);
                     if (m) hc++;
@@ -132,20 +119,18 @@
                 },
                 pointToLayer: function(f, l) {
                     var color = f.properties.color || '#3498db';
-                    var baseSize = zoom * 1.8;
-                    
-                    // Adjust size by category
-                    var scale = 1.0;
-                    if (f.properties.category.includes('Level 3/4')) scale = 1.4;
-                    else if (f.properties.category.includes('Level 2')) scale = 1.1;
-                    else if (f.properties.category.includes('Level 1')) scale = 0.8;
-
-                    return L.marker(l, { icon: getCrossIcon(color, Math.max(baseSize * scale, 8)) });
+                    var radius = 7;
+                    if (f.properties.category.includes('Level 3/4')) radius = 10;
+                    return L.circleMarker(l, { radius: radius, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.9 });
                 },
                 onEachFeature: function(f, l) {
                     l.bindPopup(`<b>${f.properties.name}</b><br>Category: ${f.properties.category}`);
                 }
-            }).addTo(map);
+            });
+            healthCluster.addLayer(healthMarkers);
+
+            map.addLayer(floodCluster);
+            map.addLayer(healthCluster);
 
             document.getElementById('count-floods').innerText = fc;
             document.getElementById('count-health').innerText = hc;
@@ -160,30 +145,26 @@
                 var div = L.DomUtil.create('div', 'legend');
                 var content = '<b>Map Legend</b><br>';
                 
-                var floodColor = '#e74c3c';
                 if (lens === 'severity') {
-                    content += '<span class="shape triangle" style="color:#8b0000"></span> High Sev. (2.0+)<br>';
-                    content += '<span class="shape triangle" style="color:#e67e22"></span> Medium Sev. (1.5)<br>';
-                    content += '<span class="shape triangle" style="color:#f1c40f"></span> Low Sev. (1.0)<br>';
+                    content += '<i style="background: #8b0000"></i> High Sev. (2.0+)<br>';
+                    content += '<i style="background: #e67e22"></i> Medium Sev. (1.5)<br>';
+                    content += '<i style="background: #f1c40f"></i> Low Sev. (1.0)<br>';
                 } else {
-                    content += `<span class="shape triangle" style="color:${floodColor}"></span> Flood Event<br>`;
+                    content += '<i style="background: #e74c3c"></i> Flood Event<br>';
                 }
                 
                 content += '<hr style="margin: 8px 0; border: 0; border-top: 1px solid #eee;">';
-                content += '<span class="shape cross" style="color:#e74c3c"></span> High Complexity (L3/4)<br>';
-                content += '<span class="shape cross" style="color:#e67e22"></span> General Hospital (L2)<br>';
-                content += '<span class="shape cross" style="color:#2ecc71"></span> Primary Care (L1)<br>';
-                content += '<span class="shape cross" style="color:#3498db"></span> Specialized/Other<br>';
-                content += '<small style="color:#666; display:block; margin-top:5px;">Markers scale with zoom level</small>';
+                content += '<i style="background: #e74c3c"></i> High Complexity (L3/4)<br>';
+                content += '<i style="background: #e67e22"></i> General Hospital (L2)<br>';
+                content += '<i style="background: #2ecc71"></i> Primary Care (L1)<br>';
+                content += '<i style="background: #3498db"></i> Specialized/Other<br>';
+                content += '<small style="color:#666; display:block; margin-top:5px;">Numbered circles = Clustered data</small>';
                 
                 div.innerHTML = content;
                 return div;
             };
             legend.addTo(map);
         }
-
-        // Handle dynamic resizing on zoom
-        map.on('zoomend', update);
 
         Promise.all([
             fetch('colombia_floods.geojson').then(r => r.json()),
