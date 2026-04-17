@@ -15,27 +15,27 @@
         #controls { background: white; padding: 15px; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; border-bottom: 1px solid #dee2e6; position: sticky; top: 0; z-index: 1000; }
         #map { height: 75vh; width: 100%; }
         #stats { background: #fff; padding: 15px; display: flex; justify-content: space-around; font-weight: bold; border-top: 1px solid #dee2e6; font-size: 1.1em; }
-        .legend { background: white; padding: 12px; border-radius: 5px; line-height: 1.6; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-size: 12px; border: 1px solid #ddd; }
-        .legend i { width: 14px; height: 14px; float: left; margin-right: 10px; border-radius: 50%; border: 1px solid #fff; }
+        .legend { background: white; padding: 12px; border-radius: 5px; line-height: 1.6; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-size: 11px; border: 1px solid #ddd; max-width: 200px; }
+        .legend i { width: 12px; height: 12px; float: left; margin-right: 10px; border-radius: 50%; border: 1px solid #fff; }
         select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ced4da; font-size: 14px; background: white; cursor: pointer; }
         .btn-home { position: absolute; left: 20px; top: 25px; color: white; text-decoration: none; font-size: 0.85em; border: 1px solid rgba(255,255,255,0.5); padding: 5px 10px; border-radius: 4px; transition: 0.3s; }
         .label-group { display: flex; flex-direction: column; align-items: flex-start; }
         .label-group label { font-size: 0.7em; margin-bottom: 4px; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        /* Custom Cluster Styles */
+        /* Fixed Cluster Styles */
         .marker-cluster-small { background-color: rgba(181, 226, 140, 0.6); }
-        .marker-cluster-small div { background-color: rgba(110, 204, 57, 0.6); }
-        .marker-cluster-medium { background-color: rgba(241, 211, 87, 0.6); }
-        .marker-cluster-medium div { background-color: rgba(240, 194, 12, 0.6); }
+        .marker-cluster-small div { background-color: rgba(110, 204, 57, 0.6); color: #fff; }
+        .marker-cluster-medium { background-color: rgba(155, 89, 182, 0.6); }
+        .marker-cluster-medium div { background-color: rgba(142, 68, 173, 0.6); color: #fff; }
         .marker-cluster-large { background-color: rgba(253, 156, 115, 0.6); }
-        .marker-cluster-large div { background-color: rgba(241, 128, 23, 0.6); }
+        .marker-cluster-large div { background-color: rgba(241, 128, 23, 0.6); color: #fff; }
     </style>
 </head>
 <body>
     <div id="header">
         <a href="index.html" class="btn-home">← Home</a>
         <h1>Colombia Resilience Map</h1>
-        <p>Decluttered View: Facilities are clustered by region. Zoom in to see individual sites.</p>
+        <p>Merged View: Use Lenses to explore infrastructure vs historical risk</p>
     </div>
     
     <div id="controls">
@@ -66,7 +66,7 @@
     <div id="map"></div>
     
     <div id="stats">
-        <span>🌊 Floods: <span id="count-floods" style="color:#e74c3c">0</span></span>
+        <span>🌊 Floods: <span id="count-floods" style="color:#e91e63">0</span></span>
         <span>🏥 Facilities: <span id="count-health" style="color:#3498db">0</span></span>
         <span>💀 Fatalities: <span id="total-dead" style="color:#333">0</span></span>
     </div>
@@ -86,13 +86,12 @@
             var sYear = document.getElementById('year-select').value;
             var sComp = document.getElementById('complexity-select').value;
 
-            // Clear Clusters
             floodCluster.clearLayers();
             healthCluster.clearLayers();
 
             var fc = 0, hc = 0, dc = 0;
 
-            // 1. Process Floods
+            // 1. Process Floods (Magenta color for separation)
             var floodMarkers = L.geoJSON(floodData, {
                 filter: function(f) { 
                     var m = (sYear === 'all' || f.properties.year == sYear);
@@ -101,7 +100,7 @@
                 },
                 pointToLayer: function(f, l) {
                     var sev = Number(f.properties.severity) || 1;
-                    var color = sLens === 'severity' ? (sev >= 2.0 ? '#8b0000' : (sev >= 1.5 ? '#e67e22' : '#f1c40f')) : '#e74c3c';
+                    var color = sLens === 'severity' ? (sev >= 2.0 ? '#8b0000' : (sev >= 1.5 ? '#e67e22' : '#f1c40f')) : '#e91e63';
                     return L.circleMarker(l, { radius: 8, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.8 });
                 },
                 onEachFeature: function(f, l) {
@@ -143,26 +142,27 @@
             var legend = L.control({position: 'bottomright'});
             legend.onAdd = function() {
                 var div = L.DomUtil.create('div', 'legend');
-                var content = '<b>Map Legend</b><br>';
+                var content = '<b>Data Layers</b><br>';
                 
                 if (lens === 'severity') {
                     content += '<i style="background: #8b0000"></i> High Sev. (2.0+)<br>';
                     content += '<i style="background: #e67e22"></i> Medium Sev. (1.5)<br>';
                     content += '<i style="background: #f1c40f"></i> Low Sev. (1.0)<br>';
                 } else {
-                    content += '<i style="background: #e74c3c"></i> Flood Event<br>';
+                    content += '<i style="background: #e91e63"></i> Flood Event<br>';
                 }
                 
-                content += '<hr style="margin: 8px 0; border: 0; border-top: 1px solid #eee;">';
+                content += '<hr style="margin: 5px 0; border: 0; border-top: 1px solid #eee;">';
                 content += '<i style="background: #e74c3c"></i> High Complexity (L3/4)<br>';
                 content += '<i style="background: #e67e22"></i> General Hospital (L2)<br>';
                 content += '<i style="background: #2ecc71"></i> Primary Care (L1)<br>';
                 content += '<i style="background: #3498db"></i> Specialized/Other<br>';
-                content += '<hr style="margin: 8px 0; border: 0; border-top: 1px solid #eee;">';
-                content += '<b>Interface Elements:</b><br>';
-                content += '<span style="border: 2px solid #3498db; background: rgba(52, 152, 219, 0.2); width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 10px;"></span> Area Boundary (Blue Hover)<br>';
-                content += '<i style="background: #9b59b6"></i> Medium Cluster (Purple Number)<br>';
-                content += '<small style="color:#666; display:block; margin-top:5px;">Numbered circles = Clustered data groups</small>';
+                
+                content += '<hr style="margin: 5px 0; border: 0; border-top: 1px solid #eee;">';
+                content += '<b>Interface Details</b><br>';
+                content += '<span style="border: 1px solid #3498db; background: rgba(52, 152, 219, 0.2); width: 10px; height: 10px; display: inline-block; vertical-align: middle; margin-right: 5px;"></span> Area Extent (Hover)<br>';
+                content += '<i style="background: #9b59b6"></i> Medium Cluster (10-100)<br>';
+                content += '<i style="background: #6ecc39"></i> Small Cluster (<10)<br>';
                 
                 div.innerHTML = content;
                 return div;
@@ -185,5 +185,4 @@
         document.querySelectorAll('select').forEach(s => s.addEventListener('change', update));
     </script>
 </body>
-</html>/body>
 </html>
