@@ -10,8 +10,10 @@ This skill provides a standardized workflow for creating modern, card-based web 
 ## Core Functionality
 
 - **CSV Parsing**: Powered by [PapaParse](https://www.papaparse.com/) for high performance and header detection.
+- **Marker Clustering**: Automatically groups nearby data points into region-level circles with counts to prevent map clutter (decluttering).
+- **High-Quality Rendering**: Uses high-resolution Circle Points (`L.circleMarker`) instead of pixelated SVG shapes for professional visual quality.
+- **Automatic Geocoding**: Detects `latitude` and `longitude` columns to automatically plot data on an interactive Leaflet map.
 - **Modern UI**: Clean, responsive layout with a dedicated "Drop Zone" and interactive data table.
-- **Preview Scaling**: Efficiently renders large datasets by truncating to the first 100 rows while providing total counts.
 
 ## Workflow
 
