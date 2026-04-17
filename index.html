@@ -3,281 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colombia: Flood & Health Resilience Project</title>
+    <title>Colombia Resilience | Flood Risk & Health Infrastructure</title>
     <style>
         :root {
             --primary: #1a252f;
-            --secondary: #3498db;
-            --accent: #e74c3c;
-            --v0-color: #6a1b9a;
-            --bg: #f8f9fa;
-            --text: #333;
-            --card-bg: #fff;
+            --secondary: #34495e;
+            --accent: #2980b9;
+            --bg: #ffffff;
+            --surface: #f8f9fa;
+            --text: #2c3e50;
+            --muted: #7f8c8d;
+            --border: #eaedf0;
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             padding: 0;
             background-color: var(--bg);
             color: var(--text);
-            line-height: 1.6;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Navigation */
+        /* Clean Navigation */
         nav {
-            background: var(--primary);
-            padding: 1rem 2rem;
+            background: white;
+            padding: 1.25rem 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         nav .logo {
-            color: white;
-            font-size: 1.25rem;
-            font-weight: bold;
+            color: var(--primary);
+            font-size: 1.1rem;
+            font-weight: 700;
             text-decoration: none;
+            letter-spacing: -0.5px;
         }
 
         nav ul {
             list-style: none;
             display: flex;
-            gap: 20px;
+            gap: 24px;
             margin: 0;
             padding: 0;
         }
 
         nav a {
-            color: rgba(255,255,255,0.8);
+            color: var(--secondary);
             text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.3s;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color 0.2s;
         }
 
         nav a:hover {
-            color: white;
+            color: var(--accent);
         }
 
-        /* Hero Section */
+        /* Hero Section - Professional & Focused */
         header.hero {
-            background: linear-gradient(135deg, var(--primary) 0%, #2c3e50 100%);
-            color: white;
-            padding: 4rem 2rem;
+            padding: 6rem 5% 4rem 5%;
             text-align: center;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
         }
 
         header.hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+            font-size: 2.75rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 1.25rem;
+            letter-spacing: -1px;
         }
 
         header.hero p {
-            font-size: 1.1rem;
-            max-width: 800px;
+            font-size: 1.15rem;
+            max-width: 750px;
             margin: 0 auto;
-            opacity: 0.9;
+            color: var(--secondary);
+            opacity: 0.85;
         }
 
-        /* Main Content */
+        /* Main Content Grid */
         main {
             max-width: 1200px;
-            margin: 3rem auto;
-            padding: 0 2rem;
+            margin: 0 auto;
+            padding: 5rem 5%;
         }
 
-        .section-title {
-            text-align: center;
-            margin-bottom: 3rem;
+        .section-header {
+            margin-bottom: 3.5rem;
+            text-align: left;
         }
 
-        /* Tool Cards */
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        /* Feature Cards */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 6rem;
         }
 
         .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            transition: transform 0.3s, box-shadow 0.3s;
+            background: white;
+            border-radius: 8px;
+            padding: 2.5rem;
+            border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            border-top: 5px solid var(--secondary);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.04);
+            border-color: var(--accent);
         }
 
-        .card h3 {
-            margin-top: 0;
-            color: var(--primary);
-            display: flex;
+        .card.featured {
+            grid-column: 1 / -1;
+            background: var(--primary);
+            color: white;
+            flex-direction: row;
             align-items: center;
-            gap: 10px;
+            padding: 3.5rem;
+        }
+
+        .card.featured .card-content {
+            flex: 1;
+        }
+
+        .card.featured h3 { color: white; font-size: 1.75rem; }
+        .card.featured p { color: rgba(255,255,255,0.7); font-size: 1.1rem; }
+
+        .card h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
         }
 
         .card p {
             flex-grow: 1;
-            color: #666;
-            margin-bottom: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 2rem;
             font-size: 0.95rem;
+            line-height: 1.6;
         }
 
         .btn {
-            background: var(--secondary);
+            display: inline-block;
+            background: var(--primary);
             color: white;
             text-decoration: none;
-            padding: 0.75rem 1rem;
-            border-radius: 6px;
+            padding: 0.85rem 1.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 600;
             text-align: center;
-            font-weight: bold;
-            transition: opacity 0.3s;
+            transition: background 0.2s;
         }
 
         .btn:hover {
-            opacity: 0.9;
+            background: var(--accent);
         }
 
-        .btn.v0 {
-            background: var(--v0-color);
-        }
-
-        /* Dataset Registry */
-        .registry {
+        .card.featured .btn {
             background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            overflow-x: auto;
+            color: var(--primary);
+            margin-left: 3rem;
+            white-space: nowrap;
+            padding: 1rem 2rem;
         }
 
-        table {
+        /* Data Registry Table */
+        .registry-container {
+            margin-top: 4rem;
+        }
+
+        .registry-table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .registry-table th {
             text-align: left;
-        }
-
-        th, td {
             padding: 1rem;
-            border-bottom: 1px solid #eee;
+            background: var(--surface);
+            color: var(--secondary);
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
         }
 
-        th {
-            color: var(--primary);
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
+        .registry-table td {
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--secondary);
         }
 
         /* Footer */
         footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 4rem 5%;
             text-align: center;
-            padding: 4rem 2rem;
-            color: #888;
-            font-size: 0.9rem;
+            color: var(--muted);
+            font-size: 0.85rem;
         }
 
-        @media (max-width: 768px) {
-            nav { flex-direction: column; gap: 1rem; }
-            header.hero h1 { font-size: 2rem; }
+        @media (max-width: 992px) {
+            .card.featured { flex-direction: column; text-align: center; }
+            .card.featured .btn { margin-left: 0; margin-top: 2rem; width: 100%; }
+            header.hero h1 { font-size: 2.25rem; }
         }
     </style>
 </head>
 <body>
 
     <nav>
-        <a href="#" class="logo">ICT4D: Colombia Resilience</a>
+        <a href="#" class="logo">COLOMBIA RESILIENCE</a>
         <ul>
-            <li><a href="map.html">Infrastructure Map</a></li>
-            <li><a href="dashboard.html">Flood Charts</a></li>
-            <li><a href="upload.html">CSV Previewer</a></li>
-            <li><a href="https://v0.app/chat/visualize-dataset-on-map-dCU44nUvhM9" target="_blank">v0 Visualizer</a></li>
+            <li><a href="resilience.html">Resilience Map</a></li>
+            <li><a href="dashboard.html">Data Dashboard</a></li>
+            <li><a href="#data">Registry</a></li>
         </ul>
     </nav>
 
     <header class="hero">
-        <h1>Colombia Resilience & Risk Project</h1>
-        <p>Analyzing 25 years of flood risk alongside healthcare accessibility to build a more resilient future. Explore our interactive toolset designed for disaster mitigation and regional planning.</p>
+        <h1>Building a Resilient Colombia</h1>
+        <p>A data-driven platform analyzing 25 years of flood risk alongside healthcare infrastructure accessibility to optimize disaster mitigation and regional planning.</p>
     </header>
 
     <main>
-        <div class="section-title">
-            <h2>Analytical Toolset</h2>
-            <p>Interactive modules for spatial, statistical, and natural protection analysis</p>
+        
+        <div class="section-header">
+            <h2>Primary Analytical Platform</h2>
+            <p>Advanced spatial intelligence and resilience scoring</p>
+        </div>
+
+        <!-- Featured Card: The Resilience Map -->
+        <div class="card featured">
+            <div class="card-content">
+                <h3>Colombia Resilience Map</h3>
+                <p>The core analytical engine of this project. Interactively overlay a quarter-century of flood history with healthcare facility complexity to identify vulnerable regions and infrastructure gaps.</p>
+            </div>
+            <a href="resilience.html" class="btn">Launch Core Platform</a>
+        </div>
+
+        <div class="section-header">
+            <h2>Supporting Toolset</h2>
+            <p>Statistical insights and raw data processing utilities</p>
         </div>
 
         <div class="grid">
-            <!-- 1. The Map -->
-            <div class="card" style="border-top-color: var(--secondary);">
-                <h3>📍 Interactive Infrastructure Map</h3>
-                <p>Locate Colombian hospitals and clinics in relation to historical flood zones. Filter by city, year, and complexity level to assess regional coverage.</p>
-                <a href="map.html" class="btn">Open Interactive Map</a>
+            <!-- 1. Global Flood Dashboard -->
+            <div class="card">
+                <h3>Flood Impact Dashboard</h3>
+                <p>High-level statistical analysis of flood frequency, displacement trends, and humanitarian cost scaling on a global and regional level.</p>
+                <a href="dashboard.html" class="btn">View Statistics</a>
             </div>
-            
-            <!-- 2. Global Flood Dashboard -->
-            <div class="card" style="border-top-color: #2ecc71;">
-                <h3>📊 Global Flood Dashboard</h3>
-                <p>View high-level statistical analysis of historical flood data. Explore charts on displacement, country frequency, and disaster severity trends.</p>
-                <a href="dashboard.html" class="btn" style="background: #2ecc71;">View Charts Dashboard</a>
+
+            <!-- 2. CSV Upload App -->
+            <div class="card">
+                <h3>CSV Data Explorer</h3>
+                <p>A secure utility to preview and validate raw datasets. Upload CSV files to inspect structural metadata before spatial integration.</p>
+                <a href="upload.html" class="btn">Access Explorer</a>
             </div>
 
             <!-- 3. V0 Visualization -->
-            <div class="card" style="border-top-color: var(--v0-color);">
-                <h3>✨ v0 Dataset Visualizer</h3>
-                <p>A specialized, AI-augmented visualization of our flood datasets. Explore advanced mapping layouts and interactive AI-driven insights via the v0 platform.</p>
-                <a href="https://v0.app/chat/visualize-dataset-on-map-dCU44nUvhM9" target="_blank" class="btn v0">View on v0.app</a>
-            </div>
-
-            <!-- 4. CSV Upload App -->
-            <div class="card" style="border-top-color: var(--accent);">
-                <h3>📁 CSV Data Explorer</h3>
-                <p>A web-based tool to preview raw datasets. Upload any CSV file to inspect its structure and metadata before integrating it into our spatial models.</p>
-                <a href="upload.html" class="btn accent">Launch Previewer</a>
+            <div class="card">
+                <h3>AI-Augmented Analysis</h3>
+                <p>Explore our datasets through specialized AI-driven mapping layouts and dynamic insights powered by the v0 platform.</p>
+                <a href="https://v0.app/chat/visualize-dataset-on-map-dCU44nUvhM9" target="_blank" class="btn">Open v0 Analysis</a>
             </div>
         </div>
 
-        <div class="section-title" id="data">
-            <h2>Dataset Registry</h2>
-            <p>Open data and metadata used in the construction of this resilience platform</p>
-        </div>
-
-        <div class="registry">
-            <table>
+        <div class="registry-container" id="data">
+            <div class="section-header">
+                <h2>Dataset Registry</h2>
+                <p>Formal registry of open data and internal complexity metadata</p>
+            </div>
+            <table class="registry-table">
                 <thead>
                     <tr>
                         <th>Dataset Name</th>
-                        <th>Source</th>
+                        <th>Source Authority</th>
                         <th>Format</th>
-                        <th>Retrieval Date</th>
+                        <th>Last Verified</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Global Flood Archive (2001-2026)</td>
                         <td>Dartmouth Flood Observatory (DFO)</td>
-                        <td>GeoJSON / CSV</td>
+                        <td>GeoJSON</td>
                         <td>April 2026</td>
                     </tr>
                     <tr>
                         <td>Colombia Health Infrastructure</td>
-                        <td>Overpass API (OpenStreetMap)</td>
+                        <td>OpenStreetMap / Overpass API</td>
                         <td>GeoJSON</td>
                         <td>April 2026</td>
                     </tr>
                     <tr>
                         <td>Health Facility Complexity Indices</td>
-                        <td>Internal Complexity Analysis</td>
+                        <td>Internal Resilience Analysis</td>
                         <td>GeoJSON</td>
                         <td>April 2026</td>
                     </tr>
@@ -287,7 +340,7 @@
     </main>
 
     <footer>
-        <p>© 2026 ICT4D Tumaco Resilience Project. Powered by OpenStreetMap, DFO, and Humanitarian Data Exchange.</p>
+        <p>© 2026 ICT4D Tumaco Resilience Project. Data sourced from OpenStreetMap, DFO, and Humanitarian Data Exchange.</p>
     </footer>
 
 </body>
