@@ -12,7 +12,7 @@
     <style>
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #212529; }
         #header { background: #1a252f; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        #controls { background: white; padding: 15px; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; border-bottom: 1px solid #dee2e6; position: sticky; top: 0; z-index: 1000; }
+        #controls { background: white; padding: 15px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid #dee2e6; position: sticky; top: 0; z-index: 1000; }
         #map { height: 75vh; width: 100%; position: relative; }
         #stats { background: #fff; padding: 15px; display: flex; justify-content: space-around; font-weight: bold; border-top: 1px solid #dee2e6; font-size: 1.1em; }
         .legend { background: white; padding: 10px; border-radius: 5px; line-height: 1.5; box-shadow: 0 0 10px rgba(0,0,0,0.2); font-size: 10px; border: 1px solid #ccc; max-width: 160px; pointer-events: none; }
@@ -35,7 +35,7 @@
     <div id="header">
         <a href="index.html" class="btn-home">← Home</a>
         <h1>Colombia Resilience Map</h1>
-        <p>Merged View: Use Lenses to explore infrastructure vs historical risk</p>
+        <p>Dynamic Analysis: Use Lenses and Filters to explore historical flood severity</p>
     </div>
     
     <div id="controls">
@@ -53,6 +53,15 @@
             <select id="year-select"><option value="all">All Records</option></select>
         </div>
         <div class="label-group">
+            <label>Flood Severity</label>
+            <select id="severity-filter">
+                <option value="all">All Intensities</option>
+                <option value="2.0">High Severity (2.0+)</option>
+                <option value="1.5">Medium Severity (1.5)</option>
+                <option value="1.0">Low Severity (1.0)</option>
+            </select>
+        </div>
+        <div class="label-group">
             <label>Facility Complexity</label>
             <select id="complexity-select">
                 <option value="all">All Complexity Levels</option>
@@ -67,7 +76,7 @@
     <div id="map"></div>
     
     <div id="stats">
-        <span>🌊 Floods: <span id="count-floods" style="color:#e91e63">0</span></span>
+        <span>🌊 Floods: <span id="count-floods" style="color:#8b0000">0</span></span>
         <span>🏥 Facilities: <span id="count-health" style="color:#3498db">0</span></span>
         <span>💀 Fatalities: <span id="total-dead" style="color:#333">0</span></span>
     </div>
@@ -85,6 +94,7 @@
         function update() {
             var sLens = document.getElementById('lens-select').value;
             var sYear = document.getElementById('year-select').value;
+            var sSev = document.getElementById('severity-filter').value;
             var sComp = document.getElementById('complexity-select').value;
 
             floodCluster.clearLayers();
@@ -92,16 +102,19 @@
 
             var fc = 0, hc = 0, dc = 0;
 
-            // 1. Process Floods
+            // 1. Process Floods (Red Gradient)
             var floodMarkers = L.geoJSON(floodData, {
                 filter: function(f) { 
-                    var m = (sYear === 'all' || f.properties.year == sYear);
-                    if (m && sLens !== 'vulnerability') { fc++; dc += (Number(f.properties.dead) || 0); }
-                    return m && sLens !== 'vulnerability';
+                    var mYear = (sYear === 'all' || f.properties.year == sYear);
+                    var mSev = (sSev === 'all' || f.properties.severity == Number(sSev));
+                    var matches = mYear && mSev && (sLens !== 'vulnerability');
+                    if (matches) { fc++; dc += (Number(f.properties.dead) || 0); }
+                    return matches;
                 },
                 pointToLayer: function(f, l) {
                     var sev = Number(f.properties.severity) || 1;
-                    var color = sLens === 'severity' ? (sev >= 2.0 ? '#8b0000' : (sev >= 1.5 ? '#e67e22' : '#f1c40f')) : '#e91e63';
+                    // Red Gradient: High (#8b0000), Medium (#ff0000), Low (#ff9999)
+                    var color = sev >= 2.0 ? '#8b0000' : (sev >= 1.5 ? '#ff0000' : '#ff9999');
                     return L.circleMarker(l, { radius: 8, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.8 });
                 },
                 onEachFeature: function(f, l) {
@@ -141,25 +154,22 @@
 
         function updateLegend(lens) {
             document.querySelectorAll('.legend').forEach(el => el.remove());
-            // Move legend to top-right to avoid cutting it off at the bottom
             var legend = L.control({position: 'topright'});
             legend.onAdd = function() {
                 var div = L.DomUtil.create('div', 'legend');
-                var content = '<b>Data Layers</b><br>';
+                var content = '<b>Flood Severity</b><br>';
                 
-                if (lens === 'severity') {
-                    content += '<i style="background: #8b0000"></i> High Sev.<br>';
-                    content += '<i style="background: #e67e22"></i> Med Sev.<br>';
-                    content += '<i style="background: #f1c40f"></i> Low Sev.<br>';
-                } else {
-                    content += '<i style="background: #e91e63"></i> Flood Event<br>';
-                }
+                content += '<i style="background: #8b0000"></i> High (2.0+)<br>';
+                content += '<i style="background: #ff0000"></i> Medium (1.5)<br>';
+                content += '<i style="background: #ff9999"></i> Low (1.0)<br>';
                 
                 if (lens !== 'floods_only') {
                     content += '<hr style="margin: 5px 0; border: 0; border-top: 1px solid #eee;">';
+                    content += '<b>Facilities</b><br>';
                     content += '<i style="background: #e74c3c"></i> High Comp. (L3)<br>';
                     content += '<i style="background: #e67e22"></i> General Hosp. (L2)<br>';
                     content += '<i style="background: #2ecc71"></i> Primary Care (L1)<br>';
+                    content += '<i style="background: #3498db"></i> Specialized/Other<br>';
                 }
                 
                 content += '<hr style="margin: 5px 0; border: 0; border-top: 1px solid #eee;">';
