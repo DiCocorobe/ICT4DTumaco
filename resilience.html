@@ -182,11 +182,11 @@
             };
             legend.addTo(map);
         }
-
-        Promise.all([
-            fetch('colombia_floods.geojson').then(r => r.json()),
-            fetch('colombia_health_detailed.geojson').then(r => r.json())
-        ]).then(([fData, hData]) => {
+// Data Loading
+Promise.all([
+    fetch('data/colombia_floods.geojson').then(r => r.json()),
+    fetch('data/colombia_health_detailed.geojson').then(r => r.json())
+]).then(([fData, hData]) => {
             floodData = fData; healthData = hData;
             var ys = document.getElementById('year-select');
             [...new Set(fData.features.map(x => x.properties.year))].sort().reverse().forEach(y => {
