@@ -13,10 +13,10 @@
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #212529; }
         #header { background: #1a252f; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         #controls { background: white; padding: 15px; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; border-bottom: 1px solid #dee2e6; position: sticky; top: 0; z-index: 1000; }
-        #map { height: 75vh; width: 100%; }
+        #map { height: 75vh; width: 100%; position: relative; }
         #stats { background: #fff; padding: 15px; display: flex; justify-content: space-around; font-weight: bold; border-top: 1px solid #dee2e6; font-size: 1.1em; }
-        .legend { background: white; padding: 12px; border-radius: 5px; line-height: 1.6; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-size: 11px; border: 1px solid #ddd; max-width: 200px; }
-        .legend i { width: 12px; height: 12px; float: left; margin-right: 10px; border-radius: 50%; border: 1px solid #fff; }
+        .legend { background: white; padding: 10px; border-radius: 5px; line-height: 1.5; box-shadow: 0 0 10px rgba(0,0,0,0.2); font-size: 10px; border: 1px solid #ccc; max-width: 160px; pointer-events: none; }
+        .legend i { width: 10px; height: 10px; float: left; margin-right: 8px; border-radius: 50%; border: 1px solid #fff; margin-top: 2px; }
         select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ced4da; font-size: 14px; background: white; cursor: pointer; }
         .btn-home { position: absolute; left: 20px; top: 25px; color: white; text-decoration: none; font-size: 0.85em; border: 1px solid rgba(255,255,255,0.5); padding: 5px 10px; border-radius: 4px; transition: 0.3s; }
         .label-group { display: flex; flex-direction: column; align-items: flex-start; }
@@ -43,6 +43,7 @@
             <label>Analysis Lens</label>
             <select id="lens-select">
                 <option value="all">🌐 Standard View (Both Layers)</option>
+                <option value="floods_only">🌊 Floods Only View</option>
                 <option value="vulnerability">🏥 Healthcare focus</option>
                 <option value="severity">⚠️ Disaster Severity</option>
             </select>
@@ -91,7 +92,7 @@
 
             var fc = 0, hc = 0, dc = 0;
 
-            // 1. Process Floods (Magenta color for separation)
+            // 1. Process Floods
             var floodMarkers = L.geoJSON(floodData, {
                 filter: function(f) { 
                     var m = (sYear === 'all' || f.properties.year == sYear);
@@ -110,9 +111,10 @@
             floodCluster.addLayer(floodMarkers);
 
             // 2. Process Health Facilities
+            var showHealth = (sLens !== 'floods_only');
             var healthMarkers = L.geoJSON(healthData, {
                 filter: function(f) {
-                    var m = (sComp === 'all' || f.properties.category === sComp);
+                    var m = showHealth && (sComp === 'all' || f.properties.category === sComp);
                     if (m) hc++;
                     return m;
                 },
@@ -139,30 +141,31 @@
 
         function updateLegend(lens) {
             document.querySelectorAll('.legend').forEach(el => el.remove());
-            var legend = L.control({position: 'bottomright'});
+            // Move legend to top-right to avoid cutting it off at the bottom
+            var legend = L.control({position: 'topright'});
             legend.onAdd = function() {
                 var div = L.DomUtil.create('div', 'legend');
                 var content = '<b>Data Layers</b><br>';
                 
                 if (lens === 'severity') {
-                    content += '<i style="background: #8b0000"></i> High Sev. (2.0+)<br>';
-                    content += '<i style="background: #e67e22"></i> Medium Sev. (1.5)<br>';
-                    content += '<i style="background: #f1c40f"></i> Low Sev. (1.0)<br>';
+                    content += '<i style="background: #8b0000"></i> High Sev.<br>';
+                    content += '<i style="background: #e67e22"></i> Med Sev.<br>';
+                    content += '<i style="background: #f1c40f"></i> Low Sev.<br>';
                 } else {
                     content += '<i style="background: #e91e63"></i> Flood Event<br>';
                 }
                 
-                content += '<hr style="margin: 5px 0; border: 0; border-top: 1px solid #eee;">';
-                content += '<i style="background: #e74c3c"></i> High Complexity (L3/4)<br>';
-                content += '<i style="background: #e67e22"></i> General Hospital (L2)<br>';
-                content += '<i style="background: #2ecc71"></i> Primary Care (L1)<br>';
-                content += '<i style="background: #3498db"></i> Specialized/Other<br>';
+                if (lens !== 'floods_only') {
+                    content += '<hr style="margin: 5px 0; border: 0; border-top: 1px solid #eee;">';
+                    content += '<i style="background: #e74c3c"></i> High Comp. (L3)<br>';
+                    content += '<i style="background: #e67e22"></i> General Hosp. (L2)<br>';
+                    content += '<i style="background: #2ecc71"></i> Primary Care (L1)<br>';
+                }
                 
                 content += '<hr style="margin: 5px 0; border: 0; border-top: 1px solid #eee;">';
-                content += '<b>Interface Details</b><br>';
-                content += '<span style="border: 1px solid #3498db; background: rgba(52, 152, 219, 0.2); width: 10px; height: 10px; display: inline-block; vertical-align: middle; margin-right: 5px;"></span> Area Extent (Hover)<br>';
-                content += '<i style="background: #9b59b6"></i> Medium Cluster (10-100)<br>';
-                content += '<i style="background: #6ecc39"></i> Small Cluster (<10)<br>';
+                content += '<b>Clusters</b><br>';
+                content += '<i style="background: #9b59b6"></i> Med (10-100)<br>';
+                content += '<i style="background: #6ecc39"></i> Small (<10)<br>';
                 
                 div.innerHTML = content;
                 return div;
