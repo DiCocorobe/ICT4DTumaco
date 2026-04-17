@@ -5,14 +5,13 @@ A unified data-driven project mapping the intersection of environmental risk and
 ## [Project Landing Page](https://dicocorobe.github.io/ICT4DTumaco/)
 
 ### Key Tools & Visualizations
-- **[Interactive Infrastructure Map](https://dicocorobe.github.io/ICT4DTumaco/map.html)**: 25 years of flood history mapped alongside hospital and clinic locations with dynamic filters.
-- **[Resilience Analysis Dashboard](https://dicocorobe.github.io/ICT4DTumaco/resilience.html)**: Advanced spatial categorization including Health System Stress-Tests and Human Cost scaling.
-- **[Global Flood Statistics](https://dicocorobe.github.io/ICT4DTumaco/dashboard.html)**: High-level data visualization of flood frequency, country impact, and humanitarian displacement.
+- **[Colombia Resilience Map](https://dicocorobe.github.io/ICT4DTumaco/resilience.html)**: The core analytical platform mapping 25 years of flood history alongside healthcare infrastructure complexity. Features dynamic analysis lenses and regional clustering.
+- **[Flood Impact Dashboard](https://dicocorobe.github.io/ICT4DTumaco/dashboard.html)**: High-level statistical analysis of flood frequency, humanitarian displacement, and disaster severity trends.
+- **[CSV Data Explorer](https://dicocorobe.github.io/ICT4DTumaco/upload.html)**: Professional utility for validating and previewing raw datasets before spatial integration.
 
 ### Data Registry
 - **Flood Events**: Dartmouth Flood Observatory (DFO) & HDX.
 - **Health Infrastructure**: OpenStreetMap (via Overpass API).
-
 ### Technology Stack
 - **Leaflet.js**: Geospatial mapping and GeoJSON rendering.
 - **Chart.js**: Statistical data visualization.
